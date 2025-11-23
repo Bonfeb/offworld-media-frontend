@@ -1,0 +1,1167 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&display=swap");
+
+@import "tailwindcss";
+
+/* ------------------------- */
+/* ✅ Tailwind v4 THEME TOKENS - UNIVERSAL PALETTE */
+/* ------------------------- */
+@theme {
+  /* Core Colors - Universal Palette */
+  --color-background: #f4f5f7;
+  --color-foreground: #1a1c23;
+  --color-border: #d5d8e0;
+  --color-input: #ffffff;
+  --color-ring: #5a6dff;
+
+  /* Card Colors */
+  --color-card: #ffffff;
+  --color-card-foreground: #1a1c23;
+
+  /* Popover Colors */
+  --color-popover: #ffffff;
+  --color-popover-foreground: #1a1c23;
+
+  /* Muted Colors - Universal Neutrals */
+  --color-muted: #f4f5f7;
+  --color-muted-foreground: #2f364d;
+  --color-muted-50: #f4f5f7;
+  --color-muted-100: #e8eaed;
+  --color-muted-200: #d5d8e0;
+  --color-muted-300: #b8bcc8;
+  --color-muted-400: #9499a8;
+  --color-muted-500: #6e7485;
+  --color-muted-600: #2f364d;
+  --color-muted-700: #1a1c23;
+  --color-muted-800: #0f1117;
+  --color-muted-900: #08090c;
+
+  /* Primary Colors - Deep Slate Navy */
+  --color-primary: #2f364d;
+  --color-primary-foreground: #ffffff;
+
+  /* Secondary Colors - Modern Electric Blue */
+  --color-secondary: #5a6dff;
+  --color-secondary-foreground: #ffffff;
+
+  /* Accent Colors - Cool Teal & Warm Coral */
+  --color-accent: #00b8c8;
+  --color-accent-foreground: #ffffff;
+
+  /* Premium Gold */
+  --color-gold: #d6a75d;
+  --color-gold-foreground: #000000;
+
+  /* Destructive Colors */
+  --color-destructive: #ff6b4a;
+  --color-destructive-foreground: #ffffff;
+
+  /* Success Colors */
+  --color-success: #059669;
+  --color-success-foreground: #ffffff;
+
+  /* Warning Colors */
+  --color-warning: #d6a75d;
+  --color-warning-foreground: #000000;
+
+  /* Error Colors */
+  --color-error: #dc2626;
+  --color-error-foreground: #ffffff;
+
+  /* Surface */
+  --color-surface: #ffffff;
+  --color-surface-foreground: #1a1c23;
+
+  /* Text Colors */
+  --color-text-primary: #1a1c23;
+  --color-text-secondary: #2f364d;
+
+  /* Brand Colors */
+  --color-electric-blue: #5a6dff;
+  --color-cool-teal: #00b8c8;
+  --color-warm-coral: #ff6b4a;
+  --color-premium-gold: #d6a75d;
+
+  /* Fonts */
+  --font-sans: "Inter", sans-serif;
+  --font-accent: "Playfair Display", serif;
+
+  /* Shadows */
+  --shadow-cta: 0 4px 6px -1px rgba(47, 54, 77, 0.1);
+  --shadow-portfolio: 0 4px 6px -1px rgba(47, 54, 77, 0.1);
+  --shadow-form: 0 10px 15px -3px rgba(47, 54, 77, 0.1);
+
+  /* Blur */
+  --backdrop-blur-nav: 8px;
+
+  /* Z-index */
+  --z-100: 100;
+  --z-150: 150;
+  --z-200: 200;
+
+  /* Breakpoints - Enhanced */
+  --breakpoint-xs: 480px;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+}
+
+/* ------------------------- */
+/* ✅ Base Styles (SAFE) */
+/* ------------------------- */
+
+@layer base {
+  :root * {
+    border-color: var(--color-border);
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    font-size: 16px;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-sans);
+    color: var(--color-foreground);
+    line-height: 1.2;
+  }
+
+  .font-accent {
+    font-family: var(--font-accent);
+  }
+
+  /* Improved responsive typography */
+  h1 {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+  }
+
+  h2 {
+    font-size: clamp(1.5rem, 3.5vw, 2rem);
+  }
+
+  h3 {
+    font-size: clamp(1.25rem, 3vw, 1.5rem);
+  }
+
+  /* Automatic text color classes based on background */
+  .text-auto {
+    color: inherit;
+  }
+
+  .bg-dark {
+    background-color: var(--color-muted-900);
+    color: white;
+  }
+
+  .bg-medium {
+    background-color: var(--color-muted-700);
+    color: white;
+  }
+
+  .bg-light {
+    background-color: var(--color-muted-400);
+    color: black;
+  }
+
+  .bg-very-light {
+    background-color: var(--color-muted-200);
+    color: black;
+  }
+}
+
+/* ------------------------- */
+/* ✅ Enhanced Responsive Utilities */
+/* ------------------------- */
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .shadow-cta {
+    box-shadow: var(--shadow-cta);
+  }
+
+  .shadow-portfolio {
+    box-shadow: var(--shadow-portfolio);
+  }
+
+  .shadow-form {
+    box-shadow: var(--shadow-form);
+  }
+
+  .backdrop-blur-nav {
+    backdrop-filter: blur(var(--backdrop-blur-nav));
+  }
+
+  .scroll-smooth {
+    scroll-behavior: smooth;
+  }
+
+  /* Smart text color utilities */
+  .text-on-dark {
+    color: #ffffff;
+  }
+
+  .text-on-light {
+    color: #000000;
+  }
+
+  /* Universal Palette Background Utilities */
+  .bg-universal-light {
+    background-color: var(--color-muted-50);
+    color: var(--color-foreground);
+  }
+
+  .bg-universal-medium {
+    background-color: var(--color-muted-200);
+    color: var(--color-foreground);
+  }
+
+  .bg-universal-dark {
+    background-color: var(--color-muted-700);
+    color: #ffffff;
+  }
+
+  .bg-universal-navy {
+    background-color: var(--color-primary);
+    color: #ffffff;
+  }
+
+  /* Brand Color Backgrounds */
+  .bg-electric-blue {
+    background-color: var(--color-electric-blue);
+    color: #ffffff;
+  }
+
+  .bg-cool-teal {
+    background-color: var(--color-cool-teal);
+    color: #ffffff;
+  }
+
+  .bg-warm-coral {
+    background-color: var(--color-warm-coral);
+    color: #ffffff;
+  }
+
+  .bg-premium-gold {
+    background-color: var(--color-premium-gold);
+    color: #000000;
+  }
+
+  /* Gradient Utilities */
+  .gradient-modern {
+    background: linear-gradient(
+      135deg,
+      var(--color-electric-blue) 0%,
+      var(--color-cool-teal) 100%
+    );
+  }
+
+  .gradient-energetic {
+    background: linear-gradient(
+      135deg,
+      var(--color-electric-blue) 0%,
+      var(--color-warm-coral) 100%
+    );
+  }
+
+  .gradient-premium {
+    background: linear-gradient(
+      135deg,
+      var(--color-primary) 0%,
+      var(--color-premium-gold) 100%
+    );
+  }
+
+  /* Component-specific backgrounds with proper text colors */
+  .bg-card {
+    background-color: var(--color-card);
+    color: var(--color-card-foreground);
+  }
+
+  .bg-surface {
+    background-color: var(--color-surface);
+    color: var(--color-surface-foreground);
+  }
+
+  .bg-popover {
+    background-color: var(--color-popover);
+    color: var(--color-popover-foreground);
+  }
+
+  /* Enhanced Responsive Grid Systems */
+  .responsive-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+    gap: 1rem;
+  }
+
+  .responsive-grid-sm {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+    gap: 0.75rem;
+  }
+
+  .responsive-grid-lg {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 350px), 1fr));
+    gap: 1.5rem;
+  }
+
+  /* Touch-friendly buttons for mobile */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Safe area insets for modern devices */
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-left {
+    padding-left: env(safe-area-inset-left);
+  }
+
+  .safe-right {
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Enhanced responsive spacing */
+  .responsive-padding {
+    padding: clamp(1rem, 3vw, 2rem);
+  }
+
+  .responsive-margin {
+    margin: clamp(1rem, 3vw, 2rem);
+  }
+
+  /* Text scaling for better readability */
+  .responsive-text {
+    font-size: clamp(0.875rem, 2vw, 1rem);
+  }
+
+  .responsive-text-lg {
+    font-size: clamp(1rem, 3vw, 1.25rem);
+  }
+
+  .responsive-text-xl {
+    font-size: clamp(1.25rem, 4vw, 1.5rem);
+  }
+
+  /* Loading states */
+  .skeleton-loader {
+    background: linear-gradient(
+      90deg,
+      var(--color-muted-100) 25%,
+      var(--color-muted-200) 50%,
+      var(--color-muted-100) 75%
+    );
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+  }
+
+  @keyframes loading {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+
+  /* Enhanced responsive tables */
+  .responsive-table {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  /* Smooth transitions for sidebar */
+  .sidebar-transition {
+    transition: all 0.3s ease-in-out;
+  }
+
+  /* Sidebar hover effects */
+  .sidebar-item {
+    transition: all 0.2s ease;
+  }
+
+  .sidebar-item:hover {
+    transform: translateX(4px);
+  }
+
+  /* Sidebar collapse/expand animations */
+  .sidebar-collapsed {
+    width: 5rem;
+  }
+
+  .sidebar-expanded {
+    width: 16rem;
+  }
+
+  /* Mobile sidebar overlay */
+  .sidebar-overlay {
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+  }
+
+  /* Ensure sidebar is above content on mobile */
+  .sidebar-mobile {
+    z-index: 40;
+  }
+
+  .sidebar-overlay-mobile {
+    z-index: 30;
+  }
+
+  /* Futuristic Header Styles - Updated Colors */
+  .header-futuristic {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(
+      135deg,
+      var(--color-primary) 0%,
+      var(--color-muted-700) 50%,
+      var(--color-primary) 100%
+    );
+    border-bottom: 1px solid rgba(90, 109, 255, 0.3);
+    box-shadow: 0 4px 20px rgba(90, 109, 255, 0.1);
+  }
+
+  /* Responsive futuristic effects */
+  @media (max-width: 768px) {
+    .header-futuristic {
+      background: linear-gradient(
+        135deg,
+        var(--color-primary) 0%,
+        var(--color-muted-700) 100%
+      );
+    }
+  }
+
+  /* Additional utility classes for the universal palette */
+  .text-electric-blue {
+    color: var(--color-electric-blue);
+  }
+
+  .text-cool-teal {
+    color: var(--color-cool-teal);
+  }
+
+  .text-warm-coral {
+    color: var(--color-warm-coral);
+  }
+
+  .text-premium-gold {
+    color: var(--color-premium-gold);
+  }
+
+  .border-electric-blue {
+    border-color: var(--color-electric-blue);
+  }
+
+  .border-cool-teal {
+    border-color: var(--color-cool-teal);
+  }
+
+  .border-premium-gold {
+    border-color: var(--color-premium-gold);
+  }
+}
+
+/* ------------------------- */
+/* ✅ Enhanced Dashboard Specific Styles */
+/* ------------------------- */
+
+.dashboard-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-sidebar {
+  width: 100%;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: var(--color-card);
+  border-top: 1px solid var(--color-border);
+}
+
+.dashboard-main {
+  flex: 1;
+  padding-bottom: 80px; /* Space for mobile bottom nav */
+}
+
+@media (min-width: 1024px) {
+  .dashboard-container {
+    flex-direction: row;
+  }
+
+  .dashboard-sidebar {
+    position: static;
+    width: 16rem;
+    height: 100vh;
+    border-top: none;
+    border-right: 1px solid var(--color-border);
+  }
+
+  .dashboard-main {
+    padding-bottom: 0;
+    margin-left: 0;
+  }
+}
+
+/* Enhanced card styles for better mobile appearance */
+.dashboard-card {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+@media (min-width: 768px) {
+  .dashboard-card {
+    padding: 1.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  }
+}
+
+/* Enhanced navigation items for better touch targets */
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+  min-height: 44px; /* Minimum touch target size */
+}
+
+.nav-item:hover {
+  background: var(--color-muted-50);
+}
+
+.nav-item.active {
+  background: var(--color-electric-blue);
+  color: white;
+}
+
+/* Mobile bottom navigation enhancements */
+.mobile-bottom-nav {
+  display: flex;
+  justify-content: space-around;
+  background: var(--color-card);
+  border-top: 1px solid var(--color-border);
+  padding: 0.5rem;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+}
+
+.mobile-nav-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  min-height: 44px;
+  min-width: 44px;
+  transition: all 0.2s ease;
+}
+
+.mobile-nav-button.active {
+  color: var(--color-electric-blue);
+  background: var(--color-muted-50);
+}
+
+/* ------------------------- */
+/* ✅ Enhanced Mobile-First Responsive Styles */
+/* ------------------------- */
+
+/* Extra small devices (phones, 480px and down) */
+@media (max-width: 480px) {
+  .xs\:hidden {
+    display: none !important;
+  }
+
+  .xs\:block {
+    display: block !important;
+  }
+
+  .xs\:flex {
+    display: flex !important;
+  }
+
+  .xs\:flex-col {
+    flex-direction: column !important;
+  }
+
+  .xs\:text-sm {
+    font-size: 0.875rem !important;
+  }
+
+  .xs\:p-2 {
+    padding: 0.5rem !important;
+  }
+
+  .xs\:space-y-2 > * + * {
+    margin-top: 0.5rem !important;
+  }
+}
+
+/* Small devices (phones, 640px and down) */
+@media (max-width: 640px) {
+  .sm\:hidden {
+    display: none !important;
+  }
+
+  .sm\:grid-cols-1 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .sm\:flex-col {
+    flex-direction: column !important;
+  }
+
+  .sm\:text-center {
+    text-align: center !important;
+  }
+
+  .sm\:w-full {
+    width: 100% !important;
+  }
+}
+
+/* Medium devices (tablets, 768px and down) */
+@media (max-width: 768px) {
+  .md\:hidden {
+    display: none !important;
+  }
+
+  .md\:grid-cols-2 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .md\:flex-row {
+    flex-direction: row !important;
+  }
+
+  button[aria-label="Open menu"] {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: 100;
+  }
+}
+
+/* Large devices (desktops, 1024px and down) */
+@media (max-width: 1024px) {
+  .lg\:hidden {
+    display: none !important;
+  }
+}
+
+/* ------------------------- */
+/* ✅ Enhanced Sidebar Behavior */
+/* ------------------------- */
+
+/* Small devices (tablets and below) */
+@media (max-width: 1023px) {
+  .sidebar-desktop-only {
+    display: none;
+  }
+
+  .sidebar-mobile-full {
+    width: 100vw;
+    max-width: 320px;
+  }
+}
+
+/* Large devices (desktops) */
+@media (min-width: 1024px) {
+  .sidebar-mobile-toggle {
+    display: none;
+  }
+
+  /* Smooth sidebar collapse on desktop */
+  .sidebar-collapsible {
+    transition: width 0.3s ease-in-out;
+  }
+}
+
+/* ------------------------- */
+/* ✅ Sidebar Specific Animations */
+/* ------------------------- */
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutLeft {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+}
+
+.sidebar-slide-in {
+  animation: slideInLeft 0.3s ease-out;
+}
+
+.sidebar-slide-out {
+  animation: slideOutLeft 0.3s ease-in;
+}
+
+/* ------------------------- */
+/* ✅ Enhanced Touch Interactions */
+/* ------------------------- */
+
+/* Better touch targets for sidebar items */
+.sidebar-touch-target {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.75rem 1rem;
+}
+
+/* Active state improvements */
+.sidebar-active {
+  position: relative;
+}
+
+.sidebar-active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 60%;
+  background: var(--color-electric-blue);
+  border-radius: 0 2px 2px 0;
+}
+
+/* Collapsed sidebar active state */
+.sidebar-collapsed .sidebar-active::before {
+  height: 40%;
+  width: 3px;
+}
+
+/* ------------------------- */
+/* ✅ Accessibility Improvements */
+/* ------------------------- */
+
+/* Focus styles for better accessibility */
+.sidebar-item:focus {
+  outline: 2px solid var(--color-electric-blue);
+  outline-offset: 2px;
+}
+
+/* High contrast support */
+@media (prefers-contrast: high) {
+  .sidebar-item {
+    border: 1px solid transparent;
+  }
+
+  .sidebar-item:hover {
+    border-color: var(--color-electric-blue);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-transition,
+  .sidebar-item,
+  .sidebar-collapsible {
+    transition: none;
+  }
+
+  .sidebar-slide-in,
+  .sidebar-slide-out {
+    animation: none;
+  }
+
+  .skeleton-loader {
+    animation: none;
+  }
+}
+
+/* ------------------------- */
+/* ✅ Print Styles */
+/* ------------------------- */
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .dashboard-sidebar,
+  .mobile-bottom-nav {
+    display: none !important;
+  }
+
+  .dashboard-main {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .lg\:hidden {
+    display: none !important;
+  }
+}
+
+/* ------------------------- */
+/* ✅ Futuristic Header Styles */
+/* ------------------------- */
+
+/* Futuristic lines container */
+.futuristic-lines-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Animated SVG lines */
+.line-svg {
+  position: absolute;
+  width: 200%;
+  height: 100%;
+  top: 0;
+  left: -50%;
+}
+
+.line-horizontal-1 {
+  animation: flow-line-1 12s ease-in-out infinite;
+  filter: drop-shadow(0 0 4px rgba(90, 109, 255, 0.5));
+}
+
+.line-horizontal-2 {
+  animation: flow-line-2 15s ease-in-out infinite;
+  animation-delay: -3s;
+  filter: drop-shadow(0 0 3px rgba(0, 184, 200, 0.4));
+}
+
+/* Line flow animations with wave effect */
+@keyframes flow-line-1 {
+  0%,
+  100% {
+    transform: translateX(0) scaleY(1);
+  }
+  25% {
+    transform: translateX(-10%) scaleY(1.1);
+  }
+  50% {
+    transform: translateX(-20%) scaleY(0.9);
+  }
+  75% {
+    transform: translateX(-30%) scaleY(1.05);
+  }
+}
+
+@keyframes flow-line-2 {
+  0%,
+  100% {
+    transform: translateX(0) scaleY(1);
+  }
+  33% {
+    transform: translateX(-15%) scaleY(0.95);
+  }
+  66% {
+    transform: translateX(-30%) scaleY(1.1);
+  }
+}
+
+@keyframes flow-line-3 {
+  0%,
+  100% {
+    transform: translateX(0) scaleY(1);
+  }
+  20% {
+    transform: translateX(-8%) scaleY(1.05);
+  }
+  40% {
+    transform: translateX(-16%) scaleY(0.9);
+  }
+  60% {
+    transform: translateX(-24%) scaleY(1.1);
+  }
+  80% {
+    transform: translateX(-32%) scaleY(0.95);
+  }
+}
+
+/* Animated particles/dots */
+.particles-container {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+
+.particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: radial-gradient(
+    circle,
+    var(--color-electric-blue) 0%,
+    rgba(90, 109, 255, 0) 70%
+  );
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(90, 109, 255, 0.8);
+}
+
+.particle-1 {
+  top: 20%;
+  animation: particle-flow-1 8s ease-in-out infinite;
+}
+
+.particle-2 {
+  top: 40%;
+  animation: particle-flow-2 10s ease-in-out infinite;
+  animation-delay: -2s;
+}
+
+.particle-3 {
+  top: 60%;
+  animation: particle-flow-3 12s ease-in-out infinite;
+  animation-delay: -4s;
+}
+
+.particle-4 {
+  top: 80%;
+  animation: particle-flow-4 9s ease-in-out infinite;
+  animation-delay: -1s;
+}
+
+.particle-5 {
+  top: 50%;
+  animation: particle-flow-5 11s ease-in-out infinite;
+  animation-delay: -5s;
+}
+
+@keyframes particle-flow-1 {
+  0%,
+  100% {
+    left: -5%;
+    opacity: 0;
+  }
+  10%,
+  90% {
+    opacity: 1;
+  }
+  50% {
+    left: 50%;
+  }
+  100% {
+    left: 105%;
+    opacity: 0;
+  }
+}
+
+@keyframes particle-flow-2 {
+  0%,
+  100% {
+    left: -5%;
+    opacity: 0;
+  }
+  10%,
+  90% {
+    opacity: 1;
+  }
+  50% {
+    left: 50%;
+  }
+  100% {
+    left: 105%;
+    opacity: 0;
+  }
+}
+
+@keyframes particle-flow-3 {
+  0%,
+  100% {
+    left: -5%;
+    opacity: 0;
+  }
+  10%,
+  90% {
+    opacity: 1;
+  }
+  50% {
+    left: 50%;
+  }
+  100% {
+    left: 105%;
+    opacity: 0;
+  }
+}
+
+@keyframes particle-flow-4 {
+  0%,
+  100% {
+    left: -5%;
+    opacity: 0;
+  }
+  10%,
+  90% {
+    opacity: 1;
+  }
+  50% {
+    left: 50%;
+  }
+  100% {
+    left: 105%;
+    opacity: 0;
+  }
+}
+
+@keyframes particle-flow-5 {
+  0%,
+  100% {
+    left: -5%;
+    opacity: 0;
+  }
+  10%,
+  90% {
+    opacity: 1;
+  }
+  50% {
+    left: 50%;
+  }
+  100% {
+    left: 105%;
+    opacity: 0;
+  }
+}
+
+/* Grid lines - vertical futuristic lines */
+.grid-lines {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+
+.grid-line {
+  position: absolute;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(90, 109, 255, 0.3) 50%,
+    transparent 100%
+  );
+  animation: grid-pulse 3s ease-in-out infinite;
+}
+
+.grid-line-1 {
+  left: 20%;
+  animation-delay: 0s;
+}
+
+.grid-line-2 {
+  left: 50%;
+  animation-delay: 1s;
+}
+
+.grid-line-3 {
+  left: 80%;
+  animation-delay: 2s;
+}
+
+@keyframes grid-pulse {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: scaleY(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scaleY(1.2);
+  }
+}
+
+/* Header content - ensure it stays above the effects */
+.header-content {
+  position: relative;
+  z-index: 10;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .line-svg {
+    width: 300%;
+    left: -100%;
+  }
+
+  .particle {
+    width: 3px;
+    height: 3px;
+  }
+
+  .grid-line {
+    opacity: 0.5;
+  }
+}

@@ -1,0 +1,410 @@
+import { useState, useEffect, useContext } from "react";
+import {
+  Palette,
+  Code,
+  Smartphone,
+  Zap,
+  Users,
+  TrendingUp,
+  ShoppingCart,
+} from "lucide-react";
+import { Snackbar, Alert, AlertTitle } from "@mui/material";
+import Service from "../modals/Service";
+import API from "../api";
+import { AuthContext } from "../context/AuthContext";
+import { CartConstants } from "../utils/constants";
+
+export default function Services({ setActiveNav }) {
+  const [selectedService, setSelectedService] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [cartCount, setCartCount] = useState(0);
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertSeverity, setAlertSeverity] = useState("success");
+  const [alertTitle, setAlertTitle] = useState("");
+
+  const { userId, isAuthenticated } = useContext(AuthContext);
+
+  // Initialize cart and set up callback
+  useEffect(() => {
+    if (isAuthenticated && userId) {
+      // Set up callback for cart updates
+      CartConstants.setCartCallback(userId, (items) => {
+        console.log("Cart updated in Services:", items.length, "items");
+        setCartCount(items.length);
+      });
+    } else {
+      setCartCount(0);
+    }
+
+    // Cleanup function
+    return () => {
+      if (userId) {
+        CartConstants.removeCartCallback(userId);
+      }
+    };
+  }, [isAuthenticated, userId]);
+
+  // Category configurations
+  const categoryIcons = {
+    "photo-video": Code,
+    audio: Zap,
+    graphic: Smartphone,
+    broadcasting: Palette,
+    beat_making: TrendingUp,
+    sound_recording: Users,
+    mixing: Zap,
+    mastering: Zap,
+    music_video: Code,
+    default: Palette,
+  };
+
+  const categoryConfig = {
+    "photo-video": { label: "Photo & Video" },
+    audio: { label: "Music Production" },
+    graphic: { label: "Graphic Design" },
+    broadcasting: { label: "Digital Broadcasting" },
+  };
+
+  const audioSubcategories = {
+    beat_making: "Beat Making",
+    sound_recording: "Sound Recording",
+    mixing: "Mixing",
+    mastering: "Mastering",
+    music_video: "Music Video Production",
+  };
+
+  // ✅ Show alert function
+  const showAlert = (title, message, severity = "success") => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertSeverity(severity);
+    setAlertOpen(true);
+  };
+
+  // ✅ Handle alert close
+  const handleAlertClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setAlertOpen(false);
+  };
+
+  // Fetch services from backend
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        setLoading(true);
+        const response = await API.get("/services/");
+        setServices(response.data.services || []);
+      } catch (err) {
+        setError(err.message);
+        console.error("Error fetching services:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchServices();
+  }, []);
+
+  const handleServiceClick = (service) => {
+    setSelectedService(service);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedService(null);
+  };
+
+  const handleAddToCart = async (serviceData) => {
+    if (!isAuthenticated || !userId) {
+      showAlert(
+        "Authentication required.",
+        "Please log in to add items to cart",
+        "warning"
+      );
+      return;
+    }
+    const result = addToCart(userId, serviceData);
+    if (result.success) {
+      // Show success message
+      showAlert(
+        "Success! 🎉",
+        `${serviceData.title || "Service"} has been added to your cart`,
+        "success"
+      );
+    } else {
+      // Show error message
+      showAlert(
+        "Error",
+        result.error || "Failed to add service to cart",
+        "error"
+      );
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="relative py-4 sm:py-6 lg:py-8 bg-[#2F364D] overflow-hidden">
+        <div className="relative max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8">
+          <div className="text-center mb-8 animate-pulse">
+            <div className="h-8 bg-gray-700/50 rounded-lg w-64 mx-auto mb-3"></div>
+            <div className="h-4 bg-gray-700/50 rounded-lg w-96 mx-auto"></div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((item) => (
+              <div
+                key={item}
+                className="bg-gray-800/50 rounded-lg overflow-hidden animate-pulse"
+              >
+                <div className="relative">
+                  <div className="w-full h-64 bg-gray-700/50"></div>
+                  <div className="absolute top-3 left-3 bg-gray-600/50 rounded-full h-8 w-32"></div>
+                </div>
+                <div className="p-5 space-y-3">
+                  <div className="h-6 bg-gray-700/50 rounded-full w-28"></div>
+                  <div className="h-10 bg-gray-700/50 rounded-lg w-40"></div>
+                  <div className="space-y-2">
+                    <div className="h-4 bg-gray-700/50 rounded w-full"></div>
+                    <div className="h-4 bg-gray-700/50 rounded w-5/6"></div>
+                    <div className="h-4 bg-gray-700/50 rounded w-4/6"></div>
+                  </div>
+                  <div className="flex gap-2 pt-2">
+                    <div className="flex-1 h-10 bg-gray-700/50 rounded-lg"></div>
+                    <div className="flex-1 h-10 bg-gray-700/50 rounded-lg"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="relative py-4 sm:py-6 lg:py-8 bg-[#2F364D] overflow-hidden">
+        <div className="relative max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8">
+          <div className="text-center py-12">
+            <div className="text-red-400 text-lg">Error: {error}</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative py-4 sm:py-6 lg:py-8 bg-[#2F364D] overflow-hidden">
+      {/* ✅ MUI Alert Snackbar - Appears at the top */}
+      <Snackbar
+        open={alertOpen}
+        autoHideDuration={6000}
+        onClose={handleAlertClose}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        sx={{
+          "& .MuiSnackbar-root": {
+            top: "80px !important", // Position below header
+          },
+        }}
+      >
+        <Alert
+          onClose={handleAlertClose}
+          severity={alertSeverity}
+          variant="filled"
+          sx={{
+            width: "100%",
+            fontSize: "1rem",
+            "& .MuiAlert-message": {
+              width: "100%",
+            },
+          }}
+        >
+          <AlertTitle sx={{ fontWeight: "bold", fontSize: "1.1rem", mb: 1 }}>
+            {alertTitle}
+          </AlertTitle>
+          {alertMessage}
+        </Alert>
+      </Snackbar>
+
+      {/* Background Effects */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-1/3 right-1/3 w-32 h-32 sm:w-48 sm:h-48 lg:w-64 lg:h-64 xl:w-96 xl:h-96 bg-[#5A6DFF]/15 rounded-full mix-blend-screen filter blur-lg sm:blur-xl lg:blur-2xl xl:blur-3xl opacity-40 animate-blob"></div>
+        <div className="absolute bottom-1/4 left-1/3 w-32 h-32 sm:w-48 sm:h-48 lg:w-64 lg:h-64 xl:w-96 xl:h-96 bg-[#00B8C8]/15 rounded-full mix-blend-screen filter blur-lg sm:blur-xl lg:blur-2xl xl:blur-3xl opacity-40 animate-blob animation-delay-2000"></div>
+        <div className="absolute top-1/2 left-1/4 w-32 h-32 sm:w-48 sm:h-48 lg:w-64 lg:h-64 xl:w-96 xl:h-96 bg-[#FF6B4A]/15 rounded-full mix-blend-screen filter blur-lg sm:blur-xl lg:blur-2xl xl:blur-3xl opacity-40 animate-blob animation-delay-4000"></div>
+      </div>
+
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#5A6DFF]/5 via-transparent to-[#00B8C8]/5"></div>
+
+      {/* Main Container */}
+      <div className="relative max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8">
+        <div
+          className="relative mx-auto px-3 sm:px-4 lg:px-5 xl:px-6 py-4 sm:py-6 lg:py-8 xl:py-10 
+                      bg-[#4c5375] backdrop-blur-2xl border border-[#4c5375] shadow-lg sm:shadow-xl lg:shadow-2xl rounded-xl sm:rounded-2xl lg:rounded-3xl
+                      mx-2 sm:mx-3 lg:mx-4 xl:mx-auto"
+        >
+          {/* Header Section */}
+          <div className="text-center space-y-2 sm:space-y-3 lg:space-y-4 xl:space-y-6 mb-6 sm:mb-8 lg:mb-10 xl:mb-12">
+            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-white drop-shadow-[0_2px_8px_rgba(90,109,255,0.3)]">
+              Our Services
+            </h2>
+            <p className="text-xs sm:text-sm lg:text-base xl:text-lg text-[#D5D8E0] max-w-xs sm:max-w-md md:max-w-xl lg:max-w-2xl mx-auto drop-shadow-sm px-2 sm:px-4">
+              Comprehensive solutions tailored to your needs. We deliver
+              excellence across all digital disciplines.
+            </p>
+          </div>
+
+          {/* Services Grid */}
+          <div className="flex justify-center">
+            {services.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="text-[#D5D8E0] text-lg">
+                  No services available
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 xl:gap-8 w-full max-w-6xl">
+                {services.map((service) => {
+                  const getServiceIcon = (service) => {
+                    if (
+                      service.category === "audio" &&
+                      service.audio_category
+                    ) {
+                      return (
+                        categoryIcons[service.audio_category] ||
+                        categoryIcons.default
+                      );
+                    }
+                    return (
+                      categoryIcons[service.category] || categoryIcons.default
+                    );
+                  };
+
+                  const FallbackIcon = getServiceIcon(service);
+                  const isInCart =
+                    isAuthenticated &&
+                    CartConstants.isServiceInCart(userId, service.id);
+
+                  return (
+                    <div
+                      key={service.id}
+                      onClick={() => handleServiceClick(service)}
+                      className={`group relative bg-gradient-to-br from-[#5A6DFF]/15 to-[#00B8C8]/10
+                                 backdrop-blur-xl border rounded-lg sm:rounded-xl lg:rounded-2xl
+                                 hover:shadow-[0_8px_32px_0_rgba(90,109,255,0.3),inset_0_1px_0_0_rgba(255,255,255,0.1)]
+                                 transition-all duration-300 hover:-translate-y-1 lg:hover:-translate-y-2 cursor-pointer
+                                 before:absolute before:inset-0 before:rounded-lg sm:before:rounded-xl lg:before:rounded-2xl
+                                 before:bg-gradient-to-br before:from-white/10 before:to-transparent
+                                 before:opacity-50 before:pointer-events-none
+                                 flex flex-col h-full overflow-hidden
+                                 ${
+                                   isInCart
+                                     ? "border-green-500"
+                                     : "border-[#5A6DFF]/25"
+                                 }`}
+                    >
+                      {/* In Cart Badge */}
+                      {isInCart && (
+                        <div className="absolute top-3 right-3 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-semibold z-10">
+                          In Cart
+                        </div>
+                      )}
+
+                      {/* Image Container */}
+                      <div className="relative h-48 sm:h-56 lg:h-64 xl:h-72 overflow-hidden">
+                        {service.image ? (
+                          <img
+                            src={service.image}
+                            alt={service.get_category_display || service.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#5A6DFF]/20 to-[#00B8C8]/20">
+                            <FallbackIcon
+                              size={48}
+                              className="text-[#D5D8E0] group-hover:text-white transition-colors duration-300"
+                            />
+                          </div>
+                        )}
+
+                        {/* Category Badge */}
+                        <div className="absolute top-3 left-3 bg-gradient-to-r from-[#5A6DFF] to-[#00B8C8] text-white px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm">
+                          {service.category === "audio" &&
+                          service.audio_category
+                            ? audioSubcategories[service.audio_category]
+                            : categoryConfig[service.category]?.label ||
+                              service.category}
+                        </div>
+                      </div>
+
+                      {/* Content */}
+                      <div className="relative z-10 flex-1 flex flex-col p-4 sm:p-5 lg:p-6">
+                        <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-white mb-2 sm:mb-3 drop-shadow-sm leading-tight">
+                          {service.title || service.get_category_display}
+                        </h3>
+
+                        <p className="text-sm sm:text-base text-[#D5D8E0] leading-relaxed sm:leading-relaxed group-hover:text-white/90 transition-colors duration-300 flex-1 mb-4 line-clamp-3">
+                          {service.description}
+                        </p>
+
+                        {/* Price and CTA */}
+                        <div className="relative z-10 flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="bg-green-900 text-white px-2 py-1 rounded-full text-md font-semibold">
+                              KES {service.price}
+                            </span>
+                          </div>
+
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleServiceClick(service);
+                            }}
+                            className="bg-[#2a56a8] text-white rounded-full px-4 py-2 text-sm font-semibold hover:bg-blue-700 hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-2"
+                          >
+                            <ShoppingCart className="w-4 h-5" />
+                            {isInCart ? "Update Cart" : "Add to Cart"}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <Service
+        open={isModalOpen}
+        onClose={handleCloseModal}
+        service={selectedService}
+        onAddToCart={handleAddToCart}
+      />
+
+      <style>{`
+        @keyframes blob {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          33% { transform: translate(30px, -50px) scale(1.1); }
+          66% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+        .animate-blob {
+          animation: blob 7s infinite;
+        }
+        .animation-delay-2000 {
+          animation-delay: 2s;
+        }
+        .animation-delay-4000 {
+          animation-delay: 4s;
+        }
+      `}</style>
+    </div>
+  );
+}
