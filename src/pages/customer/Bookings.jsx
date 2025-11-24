@@ -475,11 +475,12 @@ const Bookings = ({ data, loading, error, bookings, user }) => {
                   >
                     Close
                   </button>
+                  {/* 
                   {selectedBooking.status === "unpaid" && (
                     <button className="flex-1 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium">
                       Make Payment
                     </button>
-                  )}
+                  )} */}
                 </div>
               </div>
             </div>
