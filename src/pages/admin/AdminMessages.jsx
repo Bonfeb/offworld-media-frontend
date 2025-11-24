@@ -50,7 +50,6 @@ const AdminMessages = () => {
       setError(null);
     } catch (err) {
       setError("Failed to fetch messages. Please try again later.");
-      console.error("Error fetching messages:", err);
     } finally {
       setLoading(false);
     }
@@ -66,7 +65,6 @@ const AdminMessages = () => {
       );
       showNotification("Message marked as read", "success");
     } catch (err) {
-      console.error("Error marking message as read:", err);
       showNotification("Failed to mark message as read", "error");
     }
   };
@@ -108,7 +106,6 @@ const AdminMessages = () => {
       showNotification("Reply sent successfully", "success");
       handleCloseReplyModal();
     } catch (err) {
-      console.error("Error sending reply:", err);
       showNotification("Failed to send reply", "error");
     }
   };

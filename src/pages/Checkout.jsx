@@ -37,7 +37,6 @@ export default function Checkout({ onBookingSuccess, onReturnToCart }) {
 
     // Set up callback for cart updates
     CartConstants.setCartCallback(userId, (items) => {
-      console.log("Cart updated in Checkout:", items.length, "items");
       setCartItems(items);
     });
 
@@ -73,7 +72,6 @@ export default function Checkout({ onBookingSuccess, onReturnToCart }) {
 
       return total;
     } catch (error) {
-      console.error("Error calculating subtotal:", error);
       return 0;
     }
   };
@@ -182,7 +180,6 @@ export default function Checkout({ onBookingSuccess, onReturnToCart }) {
         .map((result) => result.reason);
 
       if (failedBookings.length > 0) {
-        console.error("Some bookings failed:", failedBookings);
         alert(`Some bookings failed. Please try again.`);
         return;
       }
@@ -193,7 +190,6 @@ export default function Checkout({ onBookingSuccess, onReturnToCart }) {
       alert(`Successfully booked ${successfulBookings.length} services!`);
       onBookingSuccess(successfulBookings);
     } catch (error) {
-      console.error("Booking error:", error);
       alert(error.response?.data?.error || "Failed to book services");
     } finally {
       setLoading(false);
@@ -211,7 +207,6 @@ export default function Checkout({ onBookingSuccess, onReturnToCart }) {
       const numericPrice = Number(price);
       return isNaN(numericPrice) ? 0 : numericPrice;
     } catch (error) {
-      console.error("Error getting price for item:", item, error);
       return 0;
     }
   };
@@ -221,7 +216,6 @@ export default function Checkout({ onBookingSuccess, onReturnToCart }) {
     try {
       return typeof subtotal === "number" ? subtotal.toFixed(0) : "0";
     } catch (error) {
-      console.error("Error displaying subtotal:", error);
       return "0";
     }
   };

@@ -84,8 +84,6 @@ const BookingModals = ({
         const serviceData = Array.isArray(serviceRes.data.services)
           ? serviceRes.data.services
           : [];
-        console.log("Users:", userData);
-        console.log("Services:", serviceData);
         setUsers(userData);
         setServices(serviceData);
       } catch (err) {
@@ -162,7 +160,6 @@ const BookingModals = ({
         event_location: createFormValues.event_location,
         status: createFormValues.status,
       };
-      console.log("Payload: ", payload);
       await API.post("/admin-dashboard/", payload, {
         headers: {
           "Content-Type": "application/json",
@@ -239,9 +236,6 @@ const BookingModals = ({
             ? updateFormValues.audio_category
             : selectedBooking.audio_category,
       };
-
-      console.log("Payload and Selected Booking:", payload, selectedBooking);
-
       await API.put(`/admin-booking/${selectedBooking.id}/`, payload, {
         withCredentials: true,
       });

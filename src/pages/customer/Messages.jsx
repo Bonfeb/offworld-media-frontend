@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Mail, MailOpen } from "lucide-react";
 import API from "../../api";
 
@@ -6,16 +7,28 @@ const Messages = ({ data, loading, error, user }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [messages, setMessages] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [fetchError, setFetchError] = useState(null);
+
+  const navigate = useNavigate();
+
+  const handleContactOWM = () => {
+    navigate("/services");
+  };
 
   useEffect(() => {
     const fetchMessages = async () => {
       try {
         setIsLoading(true);
-        const response = await API.get('/userdashboard/');
+        const response = await API.get("/userdashboard/");
         setMessages(response.data.messages || []);
         setFetchError(null);
       } catch (err) {
-        setFetchError(err.response?.data?.message || err.message || 'Failed to fetch messages');
+        setFetchError(
+          err.response?.data?.message ||
+            err.message ||
+            "Failed to fetch messages"
+        );
         setMessages([]);
       } finally {
         setIsLoading(false);
@@ -25,14 +38,18 @@ const Messages = ({ data, loading, error, user }) => {
     fetchMessages();
   }, []);
 
-  if (loading && !data) {
+  // Use the loading prop from parent or local loading state
+  const displayLoading = loading || isLoading;
+  const displayError = error || fetchError;
+
+  if (displayLoading && !data) {
     return (
       <div className="text-center py-8 text-gray-600">Loading messages...</div>
     );
   }
 
-  if (error) {
-    return <div className="text-center py-8 text-red-600">{error}</div>;
+  if (displayError) {
+    return <div className="text-center py-8 text-red-600">{displayError}</div>;
   }
 
   const userData = user || data?.user;
@@ -84,8 +101,11 @@ const Messages = ({ data, loading, error, user }) => {
                 : "Your messages with service providers will appear here."}
             </p>
             <div className="mt-6">
-              <button className="bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition-colors">
-                Contact Support
+              <button
+                onClick={handleContactOWM}
+                className="bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition-colors"
+              >
+                Contact Offworld Media
               </button>
             </div>
           </div>

@@ -53,7 +53,6 @@ const NewService = ({ show, handleClose, refreshServices, showAlert }) => {
     if (error) setError("");
 
     setFormData((prev) => ({ ...prev, image: file }));
-    console.log("File selected:", file);
 
     if (file) {
       // Validate file size (max 5MB)
@@ -81,7 +80,6 @@ const NewService = ({ show, handleClose, refreshServices, showAlert }) => {
 
       const reader = new FileReader();
       reader.onloadend = () => {
-        console.log("File preview:", reader.result);
       };
       reader.readAsDataURL(file);
     }
@@ -165,23 +163,12 @@ const NewService = ({ show, handleClose, refreshServices, showAlert }) => {
         formDataToSend.append("audio_category", formData.audio_category);
       }
 
-      // Debug logging
-      console.log("Form Data being sent:", {
-        category: formData.category,
-        audio_category: formData.audio_category,
-        description: formData.description,
-        price: formData.price,
-        image: formData.image ? formData.image.name : null,
-      });
-
       const response = await API.post("/service/", formDataToSend, {
         withCredentials: true,
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
-
-      console.log("✅ Service added successfully:", response.data);
 
       // Show success snackbar if showAlert function is provided
       if (showAlert) {
@@ -200,11 +187,6 @@ const NewService = ({ show, handleClose, refreshServices, showAlert }) => {
       resetForm();
       handleClose();
     } catch (err) {
-      console.error(
-        "❌ Error adding service:",
-        err.response?.data || err.message
-      );
-
       // Handle different types of errors
       if (err.response?.status === 400) {
         const errorData = err.response.data;

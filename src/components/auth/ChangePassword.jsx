@@ -68,7 +68,7 @@ const ChangePassword = ({ isOpen, onClose }) => {
         onClose();
       }, 2000);
     } catch (error) {
-      console.error("Change password error:", error);
+     
       setError(
         error.response?.data?.error ||
           "Failed to change password. Please try again."

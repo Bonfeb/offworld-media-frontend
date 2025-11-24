@@ -67,8 +67,6 @@ const SignIn = ({
         password: formData.password,
       });
 
-      console.log("Login successful:", response.data);
-
       // Store access token in sessionStorage
       sessionStorage.setItem("accessToken", response.data.access_token);
 
@@ -92,7 +90,6 @@ const SignIn = ({
       }
 
       // Show success message
-      console.log("Login successful! Welcome back.");
 
       // Call the success callback
       if (onSignInSuccess) {
@@ -105,8 +102,6 @@ const SignIn = ({
       // Close the modal
       onClose();
     } catch (error) {
-      console.error("Login error:", error);
-
       if (error.response?.data) {
         const backendErrors = error.response.data;
 
@@ -151,7 +146,6 @@ const SignIn = ({
 
   const handleSocialLogin = (provider) => {
     // Placeholder for social login functionality
-    console.log(`Social login with ${provider}`);
     alert(`${provider} login will be implemented soon!`);
   };
 

@@ -17,6 +17,7 @@ import AdminServices from "./pages/admin/services/AdminServices";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminReviews from "./pages/admin/AdminReviews";
 import AdminMessages from "./pages/admin/AdminMessages";
+import Announcements from "./pages/admin/Announcements";
 import Media from "./pages/admin/Media";
 import UnpaidBookings from "./pages/admin/bookings/UnpaidBookings";
 import PaidBookings from "./pages/admin/bookings/PaidBookings";
@@ -25,6 +26,7 @@ import CancelledBookings from "./pages/admin/bookings/CancelledBookings";
 import AllBookings from "./pages/admin/bookings/AllBookings";
 import ResetPasswordPage from "./components/auth/ResetPasswordPage";
 import AdminTeam from "./pages/admin/AdminTeam";
+import ServiceDetails from "./pages/ServiceDetails";
 
 function App() {
   const [currentPage, setCurrentPage] = useState("home");
@@ -70,6 +72,7 @@ function App() {
               <Route path="reviews" element={<AdminReviews />} />
               <Route path="messages" element={<AdminMessages />} />
               <Route path="media" element={<Media />} />
+              <Route path="announcements" element={<Announcements />} />
               <Route path="unpaid-bookings" element={<UnpaidBookings />} />
               <Route path="paid-bookings" element={<PaidBookings />} />
               <Route
@@ -96,6 +99,7 @@ function App() {
               path="/services"
               element={<Home onOpenContact={handleOpenContactModal} />}
             />
+            <Route path="/service/:serviceId" element={<ServiceDetails />} />
             <Route
               path="/about"
               element={<Home onOpenContact={handleOpenContactModal} />}

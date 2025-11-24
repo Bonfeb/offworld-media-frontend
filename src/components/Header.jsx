@@ -40,29 +40,16 @@ function Header({ activeNav, setActiveNav, onCartClick }) {
     login,
   } = useContext(AuthContext);
 
-  const navItems = [
-    "Home",
-    "Services",
-    "About",
-    "Testimonials",
-    "Team",
-    "Contact",
-  ];
+  const navItems = ["Home", "Services", "About", "Team", "Contact"];
 
   // Debug AuthContext changes
   useEffect(() => {
-    console.log("=== AuthContext Debug ===");
-    console.log("isAuthenticated:", isAuthenticated);
-    console.log("userGroups:", userGroups);
-    console.log("userName:", userName);
-    console.log("userId:", userId);
   }, [isAuthenticated, userGroups, userName, userId]);
 
   // Initialize cart and set up callback for cart updates
   useEffect(() => {
     if (isAuthenticated && userId) {
       CartConstants.setCartCallback(userId, (items) => {
-        console.log("Cart Updated in Header:", items.length, "items");
         setCartItemCount(items.length);
       });
     } else {
@@ -161,24 +148,16 @@ function Header({ activeNav, setActiveNav, onCartClick }) {
   const handleDashboardClick = () => {
     setShowProfileMenu(false);
     setIsOpen(false);
-
-    console.log("=== Dashboard Click Debug ===");
-    console.log("isAuthenticated:", isAuthenticated);
-    console.log("userGroups:", userGroups);
-    console.log("userId:", userId);
-    console.log("isAdmin():", isAdmin());
-    console.log("isCustomer():", isCustomer());
-
     // Check authentication first
     if (!isAuthenticated) {
-      console.log("User not authenticated, showing sign in");
+      
       setShowSignIn(true);
       return;
     }
 
     // Check if user groups are available
     if (!userGroups || !Array.isArray(userGroups)) {
-      console.error("User groups not available or not an array");
+      
       // Fallback to client dashboard if groups aren't available but user is authenticated
       navigate("/client-dashboard");
       return;
@@ -189,20 +168,17 @@ function Header({ activeNav, setActiveNav, onCartClick }) {
 
     if (userGroups.includes("admin")) {
       targetDashboard = "/admin-dashboard";
-      console.log("User is admin, navigating to admin dashboard");
+      
     } else if (userGroups.includes("customer")) {
       targetDashboard = "/client-dashboard";
-      console.log("User is customer, navigating to client dashboard");
+      
     } else {
-      console.warn(
-        "User has no recognized groups, defaulting to client dashboard. Groups:",
-        userGroups
-      );
+      
       // Default fallback to client dashboard
       targetDashboard = "/client-dashboard";
     }
 
-    console.log("Final target dashboard:", targetDashboard);
+    
 
     // Navigate to the target dashboard
     navigate(targetDashboard);
@@ -220,7 +196,7 @@ function Header({ activeNav, setActiveNav, onCartClick }) {
       // Redirect to home page after logout
       navigate("/");
     } catch (error) {
-      console.error("Logout error:", error);
+     
     }
   };
 
@@ -371,8 +347,9 @@ function Header({ activeNav, setActiveNav, onCartClick }) {
           </nav>
 
           {/* Right: Cart + Menu */}
+
           <div className="flex items-center gap-3">
-            {/* Cart Button - Always Visible */}
+            {/* Cart Button - Always Visible 
             <button
               onClick={handleCartClick}
               className="bg-blue-600 text-white rounded-full w-10 h-10 flex items-center justify-center hover:bg-blue-700 transition-all duration-200 relative flex-shrink-0"
@@ -386,6 +363,7 @@ function Header({ activeNav, setActiveNav, onCartClick }) {
                 </span>
               )}
             </button>
+            */}
 
             {/* Hamburger Menu - Only on Mobile */}
             <button
@@ -573,7 +551,7 @@ function Header({ activeNav, setActiveNav, onCartClick }) {
 
             <Divider sx={{ borderColor: "rgba(255,255,255,0.1)", mx: 2 }} />
 
-            {/* Cart Button in Drawer */}
+            {/* Cart Button in Drawer 
             <div className="p-4">
               <button
                 onClick={() => {
@@ -591,7 +569,7 @@ function Header({ activeNav, setActiveNav, onCartClick }) {
                   </span>
                 )}
               </button>
-            </div>
+            </div> */}
           </div>
 
           {/* Drawer Footer */}

@@ -60,7 +60,7 @@ const ResetPassword = ({ isOpen, onClose, onOpenSignIn }) => {
         }
       }, 3000);
     } catch (error) {
-      console.error("Reset password error:", error);
+      
       setError(
         error.response?.data?.error ||
           "Failed to reset password. The link may have expired."

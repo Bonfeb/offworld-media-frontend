@@ -106,7 +106,6 @@ const AdminServices = () => {
       setServices(servicesData);
       setLoading(false);
     } catch (err) {
-      console.error("Failed to load services:", err);
       setError("Failed to load services. Please try again later.");
       setServices([]);
       setLoading(false);

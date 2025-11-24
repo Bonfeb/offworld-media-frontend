@@ -27,7 +27,6 @@ export const formatBookings = (bookings) => {
   };
 
   export const handleUpdate = (booking, bookings, setSelectedBooking, setUpdateModalOpen) => {
-    console.log("Updating Booking:", booking);
     setSelectedBooking(booking)
     setUpdateModalOpen(true)
   };
@@ -53,7 +52,6 @@ export const formatBookings = (bookings) => {
       setNotification({ open: true, message: "Booking updated successfully", severity: "success" });
       setUpdateModalOpen(false);
     } catch (err) {
-      console.error("Failed to update booking", err);
       setNotification({ open: true, message: "Failed to update booking", severity: "error" });
     } finally {
       setSubmitting(false);
@@ -75,7 +73,6 @@ export const formatBookings = (bookings) => {
       setNotification({ open: true, message: "Booking deleted successfully", severity: "success" });
       setDeleteModalOpen(false);
     } catch (err) {
-      console.error("Delete error:", err);
       setNotification({ open: true, message: "Failed to delete booking", severity: "error" });
     } finally {
       setSubmitting(false);
@@ -103,7 +100,6 @@ export const formatBookings = (bookings) => {
       if (onSuccess) onSuccess(response.data);
       return response.data;
     } catch (error) {
-      console.error('Error updating service:', error);
       if (onError) onError(error);
       throw error;
     }
@@ -115,7 +111,6 @@ export const formatBookings = (bookings) => {
       if (onSuccess) onSuccess();
       return true;
     } catch (error) {
-      console.error('Error deleting service:', error);
       if (onError) onError(error);
       throw error;
     }
@@ -165,7 +160,6 @@ export const formatBookings = (bookings) => {
 
     return { success: true };
   } catch (err) {
-    console.error("Error downloading PDF:", err);
     return { success: false, error: err };
     }
   }
@@ -221,7 +215,6 @@ export const formatBookings = (bookings) => {
       const saved = localStorage.getItem(CartConstants.getCartKey(userId));
       return saved ? JSON.parse(saved) : [];
     } catch (error) {
-      console.error('Error reading cart items:', error);
       return [];
     }
   },
@@ -272,7 +265,6 @@ export const formatBookings = (bookings) => {
 
       return { success: true, data: updatedItems };
     } catch (error) {
-      console.error("Error adding to cart:", error);
       return { success: false, error: error.message };
     }
   },
@@ -292,7 +284,6 @@ export const formatBookings = (bookings) => {
 
       return { success: true };
     } catch (error) {
-      console.error("Error removing from cart:", error);
       return { success: false, error: "Failed to remove from cart" };
     }
   },
@@ -321,7 +312,6 @@ export const formatBookings = (bookings) => {
 
       return { success: true, data: currentItems };
     } catch (error) {
-      console.error("Error updating cart item:", error);
       return { success: false, error: "Failed to update cart item" };
     }
   },
@@ -338,7 +328,6 @@ export const formatBookings = (bookings) => {
 
       return { success: true };
     } catch (error) {
-      console.error("Error clearing cart:", error);
       return { success: false, error: "Failed to clear cart" };
     }
   },

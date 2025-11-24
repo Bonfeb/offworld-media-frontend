@@ -20,7 +20,6 @@ export default function ContactUs({ open, onClose }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Form submitted:", formData);
     setFormData({
       firstName: "",
       lastName: "",

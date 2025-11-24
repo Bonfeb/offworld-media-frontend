@@ -1,22 +1,82 @@
 import { useState, useEffect } from "react";
-import { ArrowRight } from "lucide-react";
+import {
+  ArrowRight,
+  Tag,
+  Music,
+  Calendar,
+  Megaphone,
+  AlertCircle,
+} from "lucide-react";
 import { useScrollVisibility } from "../hooks/useScrollVisibility";
 import { CounterCard } from "../components/CounterCard";
 import API from "../api";
 
+// Dynamic type configuration - matches Announcements.jsx
+const getTypeConfig = (type) => {
+  const typeConfigs = {
+    promotion: {
+      icon: Tag,
+      color: "bg-blue-100 text-blue-800 border-blue-200",
+      gradient: "from-blue-500 to-cyan-500",
+      label: "Promotion",
+      badgeColor: "bg-blue-500",
+      bgColor: "bg-blue-50",
+    },
+    release: {
+      icon: Music,
+      color: "bg-purple-100 text-purple-800 border-purple-200",
+      gradient: "from-purple-500 to-pink-500",
+      label: "New Release",
+      badgeColor: "bg-purple-500",
+      bgColor: "bg-purple-50",
+    },
+    event: {
+      icon: Calendar,
+      color: "bg-orange-100 text-orange-800 border-orange-200",
+      gradient: "from-orange-500 to-red-500",
+      label: "Event",
+      badgeColor: "bg-orange-500",
+      bgColor: "bg-orange-50",
+    },
+    news: {
+      icon: Megaphone,
+      color: "bg-green-100 text-green-800 border-green-200",
+      gradient: "from-green-500 to-emerald-500",
+      label: "News",
+      badgeColor: "bg-green-500",
+      bgColor: "bg-green-50",
+    },
+    // Default fallback for any unexpected types
+    default: {
+      icon: Megaphone,
+      color: "bg-gray-100 text-gray-800 border-gray-200",
+      gradient: "from-gray-500 to-gray-600",
+      label: "Announcement",
+      badgeColor: "bg-gray-500",
+      bgColor: "bg-gray-50",
+    },
+  };
+
+  return typeConfigs[type] || typeConfigs.default;
+};
+
 export default function HeroSection({ setActiveNav }) {
   const handleCtaClick = () => {
     setActiveNav("Contact");
-    setActiveNav("Services");
     document.getElementById("Contact")?.scrollIntoView({ behavior: "smooth" });
-    document.getElementById("Services")?.scrollIntoView({
-      behavior: "smooth",
-    });
+  };
+
+  const handleServicesClick = () => {
+    setActiveNav("Services");
+    document.getElementById("Services")?.scrollIntoView({ behavior: "smooth" });
   };
 
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [currentAnnouncement, setCurrentAnnouncement] = useState(0);
   const [slides, setSlides] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [announcementsLoading, setAnnouncementsLoading] = useState(true);
   const [error, setError] = useState(null);
   const { ref, isVisible } = useScrollVisibility({ threshold: 0.3 });
 
@@ -30,15 +90,13 @@ export default function HeroSection({ setActiveNav }) {
         // Transform API data to slides format
         const formattedSlides = response.data.map((image, index) => ({
           src: image.image, // CloudinaryField URL
-          alt: `Studio image ${index + 1}`, // You can add alt_text field to your model if needed
+          alt: `Studio image ${index + 1}`,
           id: image.id || index,
         }));
 
         setSlides(formattedSlides);
       } catch (err) {
-        console.error("Error fetching images:", err);
         setError(err.message);
-        // Fallback to empty array if API fails
         setSlides([]);
       } finally {
         setLoading(false);
@@ -48,6 +106,77 @@ export default function HeroSection({ setActiveNav }) {
     fetchImages();
   }, []);
 
+  // Fetch announcements from backend API
+  useEffect(() => {
+    const fetchAnnouncements = async () => {
+      try {
+        setAnnouncementsLoading(true);
+        const response = await API.get("/announcements/");
+
+        // Transform backend data to match frontend format
+        const backendAnnouncements = response.data.announcements || [];
+
+        // Filter only active announcements and transform data
+        const activeAnnouncements = backendAnnouncements
+          .filter((announcement) => {
+            const status = getAnnouncementStatus(announcement);
+            return status === "active" || status === "upcoming";
+          })
+          .map((announcement) => {
+            const config = getTypeConfig(announcement.type);
+            return {
+              id: announcement.id,
+              title: announcement.title,
+              type: announcement.type,
+              description: announcement.description,
+              // Handle different date fields based on type
+              date:
+                announcement.type === "promotion"
+                  ? announcement.startDate
+                  : announcement.date,
+              startDate: announcement.startDate,
+              endDate: announcement.endDate,
+              ctaText: getDefaultCtaText(announcement.type),
+              ...config, // Include all type config properties
+            };
+          });
+
+        setAnnouncements(activeAnnouncements);
+      } catch (err) {
+        setAnnouncements([]);
+      } finally {
+        setAnnouncementsLoading(false);
+      }
+    };
+
+    fetchAnnouncements();
+  }, []);
+
+  // Get default CTA text based on type
+  const getDefaultCtaText = (type) => {
+    const ctaTexts = {
+      promotion: "Learn More",
+      release: "Listen Now",
+      event: "RSVP Now",
+      news: "Read More",
+    };
+    return ctaTexts[type] || "Learn More";
+  };
+
+  // Check if announcement is active/expired - matches Announcements.jsx logic
+  const getAnnouncementStatus = (announcement) => {
+    const today = new Date().toISOString().split("T")[0];
+
+    if (announcement.type === "promotion") {
+      if (!announcement.endDate) return "active";
+      return announcement.endDate >= today ? "active" : "expired";
+    } else {
+      if (!announcement.date) return "active";
+      return announcement.date >= today ? "upcoming" : "past";
+    }
+  };
+
+  // Image carousel functions
   const nextSlide = () => {
     if (slides.length > 0) {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
@@ -60,19 +189,51 @@ export default function HeroSection({ setActiveNav }) {
     }
   };
 
-  const goToSlide = (index) => {
-    if (slides.length > 0) {
-      setCurrentSlide(index);
+  // Announcements functions
+  const nextAnnouncement = () => {
+    if (announcements.length > 0) {
+      setCurrentAnnouncement((prev) => (prev + 1) % announcements.length);
     }
   };
 
-  // Auto-slide only when we have slides
+  const prevAnnouncement = () => {
+    if (announcements.length > 0) {
+      setCurrentAnnouncement(
+        (prev) => (prev - 1 + announcements.length) % announcements.length
+      );
+    }
+  };
+
+  // Auto-slide for images
   useEffect(() => {
     if (slides.length === 0) return;
-
     const interval = setInterval(nextSlide, 5000);
     return () => clearInterval(interval);
   }, [slides.length]);
+
+  // Auto-rotate announcements
+  useEffect(() => {
+    if (announcements.length === 0) return;
+    const interval = setInterval(nextAnnouncement, 6000);
+    return () => clearInterval(interval);
+  }, [announcements.length]);
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const getDateDisplay = (announcement) => {
+    if (announcement.type === "promotion") {
+      return `${formatDate(announcement.startDate)} - ${formatDate(
+        announcement.endDate
+      )}`;
+    } else {
+      return formatDate(announcement.date);
+    }
+  };
 
   return (
     <div className="relative pb-1 bg-[#2F364D] overflow-hidden">
@@ -90,95 +251,11 @@ export default function HeroSection({ setActiveNav }) {
                       bg-[#4c5375] backdrop-blur-2xl border border-[#4c5375] shadow-xl lg:shadow-2xl rounded-2xl lg:rounded-3xl
                       mx-3 sm:mx-4 lg:mx-auto"
       >
-        {/* ✅ Left Section */}
-        <div className="space-y-3 sm:space-y-4 lg:space-y-6 order-2 lg:order-1">
-          {/* ✅ Glass Welcome Tag */}
-          <div className="inline-block px-3 py-2 sm:px-4 sm:py-3 bg-[#6c76c5] backdrop-blur-md border border-[#2F364D]/10 rounded-full shadow-sm">
-            <p className="text-[#f2f4fa] text-center font-medium text-xs sm:text-sm">
-              Welcome to Offworld Media
-            </p>
-          </div>
-
-          {/* ✅ Title - Responsive Text Sizing */}
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-[#b2b9d3] leading-tight sm:leading-tight">
-            Your go to
-            <span className="block bg-gradient-to-r from-[#5A6DFF] to-[#00B8C8] bg-clip-text text-transparent mt-1 sm:mt-2">
-              media company
-            </span>
-          </h1>
-
-          {/* ✅ Subtitle */}
-          <p className="text-sm sm:text-base lg:text-lg text-[#b2b9d3] leading-relaxed max-w-md">
-            Our premium services are designed to meet all your creative needs,
-            from photography to video production, ensuring high-quality results
-            for your memory/art.
-          </p>
-
-          {/* ✅ CTA Buttons - Responsive Stacking */}
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-3 sm:pt-4">
-            <button
-              onClick={handleCtaClick}
-              className="inline-flex items-center justify-center gap-2 px-6 py-2.5 sm:px-8 sm:py-3 bg-gradient-to-r from-[#5A6DFF] to-[#00B8C8] 
-                         text-white rounded-lg font-medium hover:shadow-lg transition-all duration-200 group
-                         text-sm sm:text-base"
-            >
-              Contact Us
-              <ArrowRight
-                size={18}
-                className="group-hover:translate-x-1 transition-transform"
-              />
-            </button>
-
-            <button
-              onClick={handleCtaClick}
-              className="px-6 py-2.5 sm:px-8 sm:py-3 border-2 bg-[#7292c2] border-[#2F364D]/20 text-[#2F364D] rounded-lg font-medium 
-                         hover:border-[#2F364D]/40 hover:text-[#1A1C23] transition-colors duration-200
-                         text-sm sm:text-base"
-            >
-              Our Services
-            </button>
-          </div>
-
-          {/* ✅ Stats - ALWAYS 3 IN A ROW */}
-          <div
-            ref={ref}
-            className="grid grid-cols-3 gap-3 sm:gap-4 lg:gap-6 pt-6 sm:pt-8 border-t border-[#D5D8E0]"
-          >
-            <CounterCard
-              targetValue={90}
-              suffix="+"
-              description="Clients"
-              shouldStart={isVisible}
-              className="text-center"
-              descriptionClassName="text-[#b2b9d3] text-xs sm:text-sm"
-              counterClassName="text-lg sm:text-xl lg:text-2xl font-bold text-white"
-            />
-            <CounterCard
-              targetValue={98}
-              suffix="%"
-              description="Client Satisfaction"
-              shouldStart={isVisible}
-              className="text-center"
-              descriptionClassName="text-[#b2b9d3] text-xs sm:text-sm"
-              counterClassName="text-lg sm:text-xl lg:text-2xl font-bold text-white"
-            />
-            <CounterCard
-              targetValue={3}
-              suffix="+"
-              description="Years Experience"
-              shouldStart={isVisible}
-              className="text-center"
-              descriptionClassName="text-[#b2b9d3] text-xs sm:text-sm"
-              counterClassName="text-lg sm:text-xl lg:text-2xl font-bold text-white"
-            />
-          </div>
-        </div>
-
-        {/* ✅ Right Section — Glass Carousel - Responsive Height */}
+        {/* ✅ Left Section — Image Carousel */}
         <div
           className="relative h-64 sm:h-72 md:h-80 lg:h-96 xl:h-[500px] min-h-64 
                         bg-white/80 backdrop-blur-xl border border-[#D5D8E0] shadow-xl rounded-2xl lg:rounded-3xl overflow-hidden
-                        order-1 lg:order-2 mb-4 lg:mb-0"
+                        order-1 lg:order-1 mb-4 lg:mb-0"
         >
           {/* Loading State */}
           {loading && (
@@ -211,7 +288,6 @@ export default function HeroSection({ setActiveNav }) {
                   alt={slide.alt}
                   className="w-full h-full object-cover rounded-2xl lg:rounded-3xl"
                   onError={(e) => {
-                    console.error(`Failed to load image: ${slide.src}`);
                     e.target.style.display = "none";
                   }}
                 />
@@ -273,6 +349,204 @@ export default function HeroSection({ setActiveNav }) {
               </button>
             </>
           )}
+        </div>
+
+        {/* ✅ Right Section — Announcements */}
+        <div className="space-y-6 sm:space-y-8 lg:space-y-10 order-2 lg:order-2">
+          {/* ✅ Title - Responsive Text Sizing */}
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-[#b2b9d3] leading-tight sm:leading-tight">
+            Your go to
+            <span className="block bg-gradient-to-r from-[#5A6DFF] to-[#00B8C8] bg-clip-text text-transparent mt-1 sm:mt-2">
+              media company
+            </span>
+          </h1>
+
+          {/* ✅ CTA Buttons - Responsive Stacking */}
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-3 sm:pt-4">
+            <button
+              onClick={handleCtaClick}
+              className="inline-flex items-center justify-center gap-2 px-6 py-2.5 sm:px-8 sm:py-3 bg-gradient-to-r from-[#5A6DFF] to-[#00B8C8] 
+                         text-white rounded-lg font-medium hover:shadow-lg transition-all duration-200 group
+                         text-sm sm:text-base"
+            >
+              Contact Us
+              <ArrowRight
+                size={18}
+                className="group-hover:translate-x-1 transition-transform"
+              />
+            </button>
+
+            <button
+              onClick={handleServicesClick}
+              className="px-6 py-2.5 sm:px-8 sm:py-3 border-2 bg-[#7292c2] border-[#2F364D]/20 text-[#2F364D] rounded-lg font-medium 
+                         hover:border-[#2F364D]/40 hover:text-[#1A1C23] transition-colors duration-200
+                         text-sm sm:text-base"
+            >
+              Our Services
+            </button>
+          </div>
+
+          {/* ✅ Announcements Section */}
+          <div className="relative h-48 sm:h-56 md:h-64 lg:h-72 bg-slate-900/70 backdrop-blur-xl border border-slate-700/50 shadow-2xl rounded-xl lg:rounded-2xl overflow-hidden mt-6">
+            {/* Loading State */}
+            {announcementsLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-slate-800/50 backdrop-blur-sm">
+                <div className="text-slate-200 flex items-center space-x-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
+                  <span>Loading announcements...</span>
+                </div>
+              </div>
+            )}
+
+            {/* Announcements */}
+            {!announcementsLoading && announcements.length > 0 && (
+              <>
+                {announcements.map((announcement, index) => {
+                  const config = getTypeConfig(announcement.type);
+                  const IconComponent = config.icon;
+                  const status = getAnnouncementStatus(announcement);
+
+                  return (
+                    <div
+                      key={announcement.id}
+                      className={`absolute inset-0 w-full h-full transition-opacity duration-500 p-4 sm:p-5 md:p-6 flex flex-col justify-between ${
+                        index === currentAnnouncement
+                          ? "opacity-100"
+                          : "opacity-0"
+                      }`}
+                    >
+                      {/* Header with badge and icon */}
+                      <div className="flex items-start justify-between">
+                        <span
+                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-slate-800/80 backdrop-blur-sm border border-slate-700/50 text-slate-200`}
+                        >
+                          {config.label}
+                        </span>
+                        <div
+                          className={`p-2 rounded-lg bg-slate-800/60 backdrop-blur-sm border border-slate-700/30`}
+                        >
+                          <IconComponent size={20} className="text-blue-400" />
+                        </div>
+                      </div>
+
+                      {/* Content */}
+                      <div className="flex-1 flex flex-col justify-center space-y-3 sm:space-y-4">
+                        <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white leading-tight">
+                          {announcement.title}
+                        </h3>
+
+                        <p className="text-slate-300 text-sm sm:text-base leading-relaxed line-clamp-2">
+                          {announcement.description}
+                        </p>
+                      </div>
+
+                      {/* Footer with date and CTA */}
+                      <div className="flex items-center justify-between pt-3 sm:pt-4">
+                        <div className="flex items-center text-xs sm:text-sm text-slate-400">
+                          <Calendar size={14} className="mr-2" />
+                          {getDateDisplay(announcement)}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Navigation Arrows for Announcements */}
+                {announcements.length > 1 && (
+                  <>
+                    <button
+                      onClick={prevAnnouncement}
+                      className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 bg-slate-800/70 backdrop-blur-md 
+                       hover:bg-slate-700/80 border border-slate-600/50 text-white rounded-full p-2 sm:p-2.5 transition-all z-10 hover:scale-110"
+                      aria-label="Previous announcement"
+                    >
+                      <svg
+                        className="w-4 h-4 sm:w-5 sm:h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 19l-7-7 7-7"
+                        />
+                      </svg>
+                    </button>
+
+                    <button
+                      onClick={nextAnnouncement}
+                      className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 bg-slate-800/70 backdrop-blur-md 
+                       hover:bg-slate-700/80 border border-slate-600/50 text-white rounded-full p-2 sm:p-2.5 transition-all z-10 hover:scale-110"
+                      aria-label="Next announcement"
+                    >
+                      <svg
+                        className="w-4 h-4 sm:w-5 sm:h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </button>
+                  </>
+                )}
+
+                {/* Dots Indicator */}
+                {announcements.length > 1 && (
+                  <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 flex space-x-2 z-10">
+                    {announcements.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentAnnouncement(index)}
+                        className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                          index === currentAnnouncement
+                            ? "bg-blue-400 w-6 shadow-lg shadow-blue-400/50"
+                            : "bg-slate-600 hover:bg-slate-500 w-2"
+                        }`}
+                        aria-label={`Go to announcement ${index + 1}`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* No Announcements State */}
+            {!announcementsLoading && announcements.length === 0 && (
+              <div className="absolute inset-0 flex items-center justify-center bg-slate-800/50 backdrop-blur-sm">
+                <div className="text-slate-300 text-center p-4 sm:p-6">
+                  <div className="text-slate-400 mb-2">
+                    <svg
+                      className="w-12 h-12 mx-auto"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1}
+                        d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                      />
+                    </svg>
+                  </div>
+                  <p className="text-sm sm:text-base font-medium">
+                    No active announcements
+                  </p>
+                  <p className="text-xs sm:text-sm text-slate-400 mt-1">
+                    Check back later for updates
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

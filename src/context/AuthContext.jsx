@@ -29,7 +29,6 @@ export function AuthProvider({ children }) {
           return jwtDecode(parsedTokens.access_token);
         }
       } catch (error) {
-        console.error("Error decoding token:", error);
         return null;
       }
     }
@@ -46,7 +45,6 @@ export function AuthProvider({ children }) {
       setEmail(response.data.email);
       setUserId(response.data.id);
     } catch (error) {
-      console.error("Auth check failed:", error);
       setIsAuthenticated(false);
       setUserProfilePic("");
       setUserId(null);
@@ -63,8 +61,6 @@ export function AuthProvider({ children }) {
       const response = await API.post("/login/", credentials, {
         withCredentials: true,
       });
-
-      console.log("Login response:", response.data);
 
       if (
         !response.data.access_token ||
@@ -91,7 +87,6 @@ export function AuthProvider({ children }) {
       setUserGroups(groups);
       return groups;
     } catch (error) {
-      console.error("Login failed:", error);
       throw error;
     }
   };
@@ -109,9 +104,7 @@ export function AuthProvider({ children }) {
       // Remove tokens from sessionStorage
       sessionStorage.removeItem("authTokens");
       sessionStorage.removeItem("accessToken");
-    } catch (error) {
-      console.error("Logout failed:", error);
-    }
+    } catch (error) {}
   };
 
   const contextData = {

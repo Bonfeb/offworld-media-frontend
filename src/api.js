@@ -57,7 +57,6 @@ API.interceptors.response.use(
         onRefreshed(newAccessToken);
         return API(originalRequest);
       } catch (refreshError) {
-        console.error("Token refresh failed:", refreshError);
         isRefreshing = false;
         sessionStorage.removeItem("accessToken"); // 🔴 Clear session if refresh fails
         window.location.href = "/login"; // Redirect to login page

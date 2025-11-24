@@ -44,7 +44,6 @@ export default function Team() {
     try {
       const response = await API.get("/team/");
       setTeamMembers(response.data);
-      console.log("API Response:", response.data);
     } catch (err) {
       setError(err.response?.data?.error || err.message);
     } finally {

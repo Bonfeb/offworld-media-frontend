@@ -57,7 +57,6 @@ const Overview = ({
           setLocalCartItems([]);
         }
       } catch (error) {
-        console.error("Error loading user cart from localStorage:", error);
         setLocalCartItems([]);
       }
     };
@@ -213,8 +212,6 @@ const Overview = ({
 
   // Handle individual cart item click (for editing)
   const handleCartItemClick = (item) => {
-    // You can implement edit functionality here if needed
-    console.log("Cart item clicked:", item);
     // Optionally open edit modal or navigate to cart with edit mode
     window.location.href = "/cart";
   };
@@ -659,7 +656,6 @@ export const CartConstants = {
       const saved = localStorage.getItem(CartConstants.getCartKey(userId));
       return saved ? JSON.parse(saved) : [];
     } catch (error) {
-      console.error("Error reading cart items:", error);
       return [];
     }
   },
@@ -713,7 +709,6 @@ export const CartConstants = {
 
       return { success: true, data: updatedItems };
     } catch (error) {
-      console.error("Error adding to cart:", error);
       return { success: false, error: error.message };
     }
   },
@@ -738,7 +733,6 @@ export const CartConstants = {
 
       return { success: true };
     } catch (error) {
-      console.error("Error removing from cart:", error);
       return { success: false, error: "Failed to remove from cart" };
     }
   },
@@ -771,8 +765,7 @@ export const CartConstants = {
       }
 
       return { success: true, data: currentItems };
-    } catch (error) {
-      console.error("Error updating cart item:", error);
+    } catch (error) {;
       return { success: false, error: "Failed to update cart item" };
     }
   },
@@ -792,7 +785,6 @@ export const CartConstants = {
 
       return { success: true };
     } catch (error) {
-      console.error("Error clearing cart:", error);
       return { success: false, error: "Failed to clear cart" };
     }
   },

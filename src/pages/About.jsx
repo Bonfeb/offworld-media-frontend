@@ -33,9 +33,9 @@ export default function About() {
               About Offworld Media
             </h2>
             <p className="text-[#2F364D] leading-relaxed text-sm sm:text-base lg:text-lg mb-4 sm:mb-5 lg:mb-6">
-              Founded in 2022, our studio has grown from a small team of
-              passionate media personnel to a full-service creative staff with
-              over 3+ years of industry expertise.
+              Offworld Media is a business company specializing in photography,
+              videography, music production, graphic designing and digital
+              broadcasting.
             </p>
 
             <div className="space-y-4 sm:space-y-5">

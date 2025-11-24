@@ -242,7 +242,6 @@ const Media = () => {
       } else {
         setVideoError(`Error fetching videos: ${error.message}`);
       }
-      console.error("Detailed videos API error:", error);
     } finally {
       setVideoLoading(false);
     }
@@ -278,7 +277,6 @@ const Media = () => {
       } else {
         setImageError(`Error fetching images: ${error.message}`);
       }
-      console.error("Detailed images API error:", error);
     } finally {
       setImageLoading(false);
     }
@@ -325,7 +323,6 @@ const Media = () => {
       setImagePreviewUrl(null);
       showSnackbar("Image uploaded successfully!", "success");
     } catch (error) {
-      console.error("Error uploading image:", error);
       showSnackbar("Failed to upload image. Please try again.", "error");
     } finally {
       setAddImageLoading(false);
@@ -350,7 +347,6 @@ const Media = () => {
       setVideoPreviewUrl(null);
       showSnackbar("Video uploaded successfully!", "success");
     } catch (error) {
-      console.error("Error uploading video:", error);
       showSnackbar("Failed to upload video. Please try again.", "error");
     } finally {
       setAddVideoLoading(false);
@@ -376,7 +372,6 @@ const Media = () => {
       setSelectedImage(null);
       showSnackbar("Image updated successfully!", "success");
     } catch (error) {
-      console.error("Error updating image:", error);
       showSnackbar("Failed to update image. Please try again.", "error");
     } finally {
       setUpdateImageLoading(false);
@@ -400,7 +395,6 @@ const Media = () => {
       setSelectedVideo(null);
       showSnackbar("Video updated successfully!", "success");
     } catch (error) {
-      console.error("Error updating video:", error);
       showSnackbar("Failed to update video. Please try again.", "error");
     } finally {
       setUpdateVideoLoading(false);

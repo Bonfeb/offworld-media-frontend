@@ -100,7 +100,6 @@ export default function Testimonials() {
         // Calculate stats based on actual data
         calculateStats(reviewsData);
       } catch (err) {
-        console.error("Error fetching testimonials:", err);
         setError("Failed to load testimonials. Please try again later.");
       } finally {
         setLoading(false);

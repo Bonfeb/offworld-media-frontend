@@ -81,10 +81,6 @@ const PaidBookings = () => {
       }
 
       const response = await API.get("/admin-dashboard/", { params });
-
-      console.log("API Response:", response.data);
-      console.log("Response status:", response.status);
-
       // Handle paginated response
       let bookings = [];
       let totalCount = 0;
@@ -99,9 +95,6 @@ const PaidBookings = () => {
         totalCount = bookings.length;
       }
 
-      console.log("Total bookings received:", bookings.length);
-      console.log("Total count:", totalCount);
-
       const formattedBookings = formatBookings(bookings);
 
       setPaidBookings(formattedBookings);
@@ -111,7 +104,6 @@ const PaidBookings = () => {
       }));
       setError(null);
     } catch (err) {
-      console.error("Failed to load paid bookings", err);
       setError("Failed to load bookings. Please try again later.");
     } finally {
       setLoading(false);

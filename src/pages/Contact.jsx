@@ -11,14 +11,14 @@ export default function Contact({ onOpenContact, setActiveNav }) {
     },
     {
       icon: Phone,
-      label: "Phone",
-      value: "+2547-16-132-272",
+      label: "Phone/WhatsApp",
+      value: "+254-716-132-272",
       link: "tel:+254716132272",
     },
     {
       icon: MapPin,
       label: "Address",
-      value: "9VG4+RJG Water Grounds, Prison Road, Kilifi",
+      value: "9VG4+RJG Water Sports Grounds, Prison Road, Kilifi",
       link: "https://maps.app.goo.gl/WPtjh9RXR55yWS2S9",
     },
   ];

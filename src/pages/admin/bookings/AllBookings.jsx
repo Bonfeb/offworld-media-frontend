@@ -336,7 +336,6 @@ export default function AllBookings() {
       setTotalCount(response.data.total || response.data.length);
       setLoading(false);
     } catch (err) {
-      console.error("Error fetching bookings:", err);
       setError("Failed to load bookings");
       setLoading(false);
     }
@@ -377,7 +376,6 @@ export default function AllBookings() {
       setBookings(bookingsArray);
       setTotalCount(response.data.total || response.data.length);
     } catch (error) {
-      console.error("Search error:", error);
       setBookings([]);
       setTotalCount(0);
       setError(
@@ -428,15 +426,12 @@ export default function AllBookings() {
   };
 
   const handleCreateConfirm = (newBooking) => {
-    console.log("Booking created:", newBooking);
   };
 
   const handleUpdateConfirm = (updatedBooking) => {
-    console.log("Booking updated:", updatedBooking);
   };
 
   const handleDeleteConfirm = (bookingId) => {
-    console.log("Booking deleted:", bookingId);
   };
 
   const refreshData = () => {

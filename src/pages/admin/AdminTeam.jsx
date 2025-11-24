@@ -73,7 +73,6 @@ export default function AdminTeam() {
       setTeamMembers(response.data);
     } catch (err) {
       setError(err.response?.data?.error || err.message);
-      console.error("Error fetching team members:", err);
     } finally {
       setIsLoading(false);
     }
@@ -135,7 +134,6 @@ export default function AdminTeam() {
       );
     } catch (err) {
       alert(err.response?.data?.error || err.message);
-      console.error("Error saving team member:", err);
     } finally {
       setIsSubmitting(false);
     }
@@ -165,7 +163,6 @@ export default function AdminTeam() {
       alert("Team member deleted successfully!");
     } catch (err) {
       alert(err.response?.data?.error || err.message);
-      console.error("Error deleting team member:", err);
     }
   };
 

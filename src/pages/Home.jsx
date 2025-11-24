@@ -57,12 +57,12 @@ function Home({ onOpenContact }) {
         <section id="About">
           <About />
         </section>
-        <section id="Testimonials">
-          <Testimonials />
-        </section>
         <section id="Team">
           <Team />
         </section>
+        {/*<section id="Testimonials">
+          <Testimonials />
+        </section>*/}
         <section id="Contact">
           <Contact onOpenContact={onOpenContact} />
         </section>

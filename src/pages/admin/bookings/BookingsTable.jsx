@@ -32,7 +32,6 @@ const BookingRow = ({ row, onUpdate, onDelete, isStriped }) => {
 
   const handleEditClick = (event) => {
     event.stopPropagation();
-    console.log("Edit clicked for row:", row);
     onUpdate(row);
   };
 

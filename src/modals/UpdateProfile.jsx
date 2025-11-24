@@ -104,7 +104,6 @@ const ProfileUpdate = ({ show, onHide, user, onUpdate }) => {
         onHide();
       }, 1500);
     } catch (error) {
-      console.error("Profile update error:", error);
       const errorMessage =
         error.response?.data?.message ||
         error.response?.data?.detail ||

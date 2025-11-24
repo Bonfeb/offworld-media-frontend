@@ -56,7 +56,6 @@ const ClientDashboard = () => {
     completed: [],
     cancelled: [],
   });
-  const [cart, setCart] = useState([]);
   const [successMessage, setSuccessMessage] = useState("");
   const [showRemoveModal, setShowRemoveModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -130,20 +129,11 @@ const ClientDashboard = () => {
         withCredentials: true,
       });
 
-      const updatedCart = response.data.cart.map((item) => ({
-        ...item,
-        event_date: item.event_date || null,
-        event_time: item.event_time || null,
-        event_location: item.event_location || null,
-      }));
-
       setUser(response.data.user);
       setBookings(response.data.bookings);
-      setCart([...updatedCart]);
       setDashboardData(response.data);
       setLoading(false);
     } catch (error) {
-      console.error("Error fetching dashboard data:", error);
       setError("Failed to load dashboard data");
       setLoading(false);
     }
@@ -152,7 +142,6 @@ const ClientDashboard = () => {
   // UserDashboard functions
   const handleShowRemoveModal = (service) => {
     if (!service || !service.service) {
-      console.error("❌ Error: Service ID is missing or invalid!", service);
       return;
     }
     setModalData({ service });
@@ -175,7 +164,6 @@ const ClientDashboard = () => {
 
   const handleConfirmRemove = async () => {
     if (!modalData?.service?.id) {
-      console.error("Error: service id is undefined");
       return;
     }
 
@@ -185,12 +173,11 @@ const ClientDashboard = () => {
     try {
       const serviceId = modalData.service.id;
       const response = await API.delete(`/userdashboard/${serviceId}/`);
-      setCart(response.data.cart);
+      // Remove cart-related code
       fetchUserDashboard();
       setShowRemoveModal(false);
       toast.success("Item removed from cart successfully!");
     } catch (error) {
-      console.error("Error removing item from cart:", error);
       toast.error("Failed to remove item from cart. Please try again.");
     } finally {
       setRemoveLoading(false);
@@ -200,7 +187,6 @@ const ClientDashboard = () => {
 
   const handleConfirmCancel = async () => {
     if (!modalData?.booking?.id) {
-      console.error("Error: booking id is undefined");
       toast.error("Unable to cancel booking. Please try again.");
       return;
     }
@@ -218,8 +204,6 @@ const ClientDashboard = () => {
       setShowCancelModal(false);
       await fetchUserDashboard();
     } catch (error) {
-      console.error("Error canceling booking:", error);
-
       if (error.response && error.response.status === 403) {
         setShowPermissionError(true);
       } else if (error.response && error.response.status === 404) {
@@ -234,10 +218,8 @@ const ClientDashboard = () => {
   };
 
   const handleBookService = async (serviceId) => {
-    const cartItem = cart.find((item) => item.service === serviceId);
-
+    // Remove cart-related logic since cart is removed
     if (!serviceId) {
-      console.error("Invalid serviceId:", serviceId);
       setShowFailureModal(true);
       return;
     }
@@ -246,25 +228,14 @@ const ClientDashboard = () => {
     setBookingServiceId(serviceId);
 
     try {
-      if (!cartItem) {
-        console.error("Service not found in cart:", serviceId);
-        throw new Error("SERVICE_NOT_IN_CART");
-      }
-
-      const { event_date, event_location, event_time } = cartItem;
-
-      if (!event_date || !event_time || !event_location) {
-        console.error("Missing event details in cart item:", cartItem);
-        throw new Error("MISSING_EVENT_DETAILS");
-      }
-
+      // Simplified booking logic without cart
       const response = await API.post(
         `/booking/${serviceId}/`,
         {
           status: "unpaid",
-          event_date,
-          event_time,
-          event_location,
+          event_date: new Date().toISOString().split("T")[0], // Default to today
+          event_time: "12:00", // Default time
+          event_location: "Nairobi", // Default location
         },
         { withCredentials: true }
       );
@@ -276,15 +247,15 @@ const ClientDashboard = () => {
       await fetchUserDashboard();
 
       const emailData = {
-        service_category: cartItem.service_category || "Service",
-        customer_name: user.name || "Customer",
-        customer_email: user.email,
+        service_category: "Service",
+        customer_name: user?.name || "Customer",
+        customer_email: user?.email,
         booking_id: response.data.booking_id || "N/A",
-        event_date: formatDate(event_date),
-        event_time: event_time,
-        event_location: event_location,
+        event_date: formatDate(new Date()),
+        event_time: "12:00",
+        event_location: "Nairobi",
         booking_date: formatDate(new Date()),
-        to_email: user.email,
+        to_email: user?.email,
         admin_email: response.data.admin_emails || ["bonfebdevs@gmail.com"],
       };
 
@@ -313,7 +284,6 @@ const ClientDashboard = () => {
         setShowSuccessModal(true);
         fetchUserDashboard();
       } catch (emailError) {
-        console.error("Email sending failed:", emailError);
         showSnackbar(
           "Booking successful but admin notification failed",
           "danger"
@@ -325,12 +295,8 @@ const ClientDashboard = () => {
         fetchUserDashboard();
       }
     } catch (error) {
-      console.error("Booking error:", error.message, error.response?.data);
-
       const errorMessage =
         {
-          SERVICE_NOT_IN_CART: "Service not found in your cart",
-          MISSING_EVENT_DETAILS: "Incomplete event details",
           UNEXPECTED_RESPONSE: "Unexpected server response",
         }[error.message] || "Booking failed - please try again";
 
@@ -395,7 +361,6 @@ const ClientDashboard = () => {
       setPaymentData({ bookingId: null, phoneNumber: "", amount: "" });
       await fetchUserDashboard();
     } catch (error) {
-      console.error("Error initiating payment:", error);
       showSnackbar("Failed to initiate payment. Please try again.", "danger");
     } finally {
       setPaymentLoading(false);
@@ -831,8 +796,7 @@ const ClientDashboard = () => {
       data: dashboardData,
       loading,
       error,
-      cart,
-      bookings,
+      bookings, // Removed cart prop
       user,
       onRemoveFromCart: handleShowRemoveModal,
       onCancelBooking: handleShowCancelModal,

@@ -60,7 +60,6 @@ const AdminReviews = () => {
       setError(null);
     } catch (err) {
       setError("Failed to fetch reviews. Please try again later.");
-      console.error("Error fetching reviews:", err);
     } finally {
       setLoading(false);
     }

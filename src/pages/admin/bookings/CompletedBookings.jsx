@@ -81,8 +81,6 @@ const CompletedBookings = () => {
 
         const response = await API.get("/admin-dashboard/", { params });
 
-        console.log("API Response:", response.data);
-
         // Handle both paginated and non-paginated responses
         let bookings, totalCount;
 
@@ -95,10 +93,6 @@ const CompletedBookings = () => {
           bookings = response.data || [];
           totalCount = bookings.length;
         }
-
-        console.log("Total bookings received:", bookings.length);
-        console.log("Total count:", totalCount);
-
         const formattedBookings = formatBookings(bookings);
         setCompletedBookings(formattedBookings);
 
@@ -110,7 +104,6 @@ const CompletedBookings = () => {
 
         setError(null);
       } catch (err) {
-        console.error("Failed to load completed bookings", err);
         setError("Failed to load bookings. Please try again later.");
       } finally {
         setLoading(false);

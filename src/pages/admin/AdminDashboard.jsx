@@ -25,6 +25,7 @@ import StarIcon from "@mui/icons-material/Star";
 import ChatBubbleIcon from "@mui/icons-material/ChatBubble";
 import CollectionsIcon from "@mui/icons-material/Collections";
 import BookingsIcon from "@mui/icons-material/EventNote";
+import AnnouncementIcon from "@mui/icons-material/Announcement";
 
 import API from "../../api";
 import { AuthContext } from "../../context/AuthContext";
@@ -113,6 +114,7 @@ const AdminDashboard = () => {
       path: "messages",
     },
     { id: "media", label: "Media", icon: CollectionsIcon, path: "media" },
+    {id: "announcement", label: "Announcements", icon: AnnouncementIcon, path: "announcements"}
   ];
 
   // Get current active tab from URL
@@ -579,7 +581,6 @@ const AdminDashboard = () => {
         createOpen={showBookingModal}
         onCreateClose={() => setShowBookingModal(false)}
         onCreateConfirm={(booking) => {
-          console.log("New booking created:", booking);
           setShowBookingModal(false);
         }}
         isLoading={false}

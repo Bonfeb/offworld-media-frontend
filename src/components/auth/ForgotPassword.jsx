@@ -30,7 +30,7 @@ const ForgotPassword = ({ isOpen, onClose, onOpenSignIn }) => {
         onClose();
       }, 3000);
     } catch (error) {
-      console.error("Forgot password error:", error);
+      
       setError(
         error.response?.data?.error ||
           "Failed to send reset link. Please try again."

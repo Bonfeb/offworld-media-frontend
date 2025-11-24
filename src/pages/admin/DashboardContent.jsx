@@ -38,8 +38,6 @@ const DashboardContent = () => {
             reject(new Error("Request timed out after 20 seconds"));
           }, 20000);
         });
-
-        console.log("Fetching admin dashboard overview...");
         const response = await Promise.race([
           API.get("/admin-dashboard/", {
             withCredentials: true,
@@ -54,8 +52,6 @@ const DashboardContent = () => {
           stats,
           percentages,
         } = response.data;
-
-        console.log("Dashboard stats response:", stats, percentages);
         setDashboardData({
           stats,
           percentages,
@@ -66,13 +62,9 @@ const DashboardContent = () => {
 
         setError(null);
       } catch (err) {
-        console.error("Dashboard load failed:", err);
         if (err.response) {
-          console.error("Server error response:", err.response.data);
         } else if (err.request) {
-          console.error("No response received:", err.request);
         } else {
-          console.error("Unknown error:", err.message);
         }
         setError("Failed to load dashboard data. Please try again.");
       } finally {

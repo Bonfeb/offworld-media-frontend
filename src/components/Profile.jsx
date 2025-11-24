@@ -451,7 +451,7 @@ const Profile = ({ data, loading, error, user, onTabChange }) => {
         user={userData}
         onUpdate={() => {
           // Refresh data or handle update
-          console.log("Profile updated");
+         
         }}
       />
 

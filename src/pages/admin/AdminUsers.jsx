@@ -88,8 +88,6 @@ const AdminUsers = () => {
       if (filters.email) queryParams.append("email", filters.email);
       queryParams.append("page", pagination.page);
       queryParams.append("page_size", pagination.rowsPerPage);
-
-      console.log("Fetching users with params:", queryParams.toString());
       const response = await API.get(
         `/admin-dashboard/?${queryParams.toString()}`
       );
@@ -102,21 +100,17 @@ const AdminUsers = () => {
       } else {
         usersData = [];
       }
-      console.log("API response for users:", response.data);
       setUsers(usersData);
       setError(null);
     } catch (err) {
       setError("Failed to fetch users. Please try again later.");
       setUsers([]);
-      console.error("Error fetching users:", err);
     } finally {
       setTableLoading(false);
     }
   };
 
   useEffect(() => {
-    console.log("Current filters:", filters);
-    console.log("Current pagination:", pagination);
     setLoading(true);
     fetchUsers().then(() => setLoading(false));
   }, [filters, pagination]);
@@ -126,7 +120,6 @@ const AdminUsers = () => {
       ...prev,
       page: newPage + 1,
     }));
-    console.log("Page changed to:", newPage + 1);
   };
 
   const handleChangeRowsPerPage = (event) => {
@@ -183,12 +176,9 @@ const AdminUsers = () => {
     setShowDetailsModal(true);
 
     try {
-      console.log("Fetching details for user:", user.id);
       const details = await API.get(
         `/admin-dashboard/?action=users&user_id=${user.id}`
       );
-      console.log("Fetched user details:", details.data);
-
       const responseData = details.data;
       setUserDetails({
         user: responseData.user || {},
@@ -200,7 +190,6 @@ const AdminUsers = () => {
         total_messages: responseData.total_messages || 0,
       });
     } catch (err) {
-      console.error("Error fetching user details:", err);
       setUserDetails({
         bookings: [],
         total_bookings: 0,
@@ -278,7 +267,6 @@ const AdminUsers = () => {
         severity: "success",
       });
     } catch (err) {
-      console.error("Error updating user:", err);
       const apiError = err.response?.data;
       if (apiError?.err && apiError?.details) {
         alert(
@@ -306,7 +294,6 @@ const AdminUsers = () => {
         severity: "success",
       });
     } catch (err) {
-      console.error("Error deleting user:", err);
       setSnackbar({
         open: true,
         message: "Failed to delete user. Please try again.",
@@ -354,7 +341,6 @@ const AdminUsers = () => {
         severity: "success",
       });
     } catch (err) {
-      console.error("Error downloading PDF:", err);
       setSnackbar({
         open: true,
         message: "Failed to download PDF. Please try again.",

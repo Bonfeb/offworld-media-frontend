@@ -43,7 +43,6 @@ const BookingNotification = ({ showDropdown, setShowDropdown }) => {
             try {
               notificationSound.play();
             } catch (err) {
-              console.warn("Sound playback failed:", err);
             }
             toast.info(
               <div style={{ color: "yellow", wordBreak: "break-word" }}>
@@ -70,7 +69,6 @@ const BookingNotification = ({ showDropdown, setShowDropdown }) => {
         }
       }
     } catch (error) {
-      console.error("Error fetching latest bookings:", error);
     } finally {
       setIsLoading(false);
     }

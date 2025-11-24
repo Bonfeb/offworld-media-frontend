@@ -1,4 +1,5 @@
 import { useState, useEffect, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Palette,
   Code,
@@ -9,6 +10,7 @@ import {
   ShoppingCart,
 } from "lucide-react";
 import { Snackbar, Alert, AlertTitle } from "@mui/material";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import Service from "../modals/Service";
 import API from "../api";
 import { AuthContext } from "../context/AuthContext";
@@ -25,15 +27,16 @@ export default function Services({ setActiveNav }) {
   const [alertMessage, setAlertMessage] = useState("");
   const [alertSeverity, setAlertSeverity] = useState("success");
   const [alertTitle, setAlertTitle] = useState("");
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
   const { userId, isAuthenticated } = useContext(AuthContext);
 
+  const navigate = useNavigate();
   // Initialize cart and set up callback
   useEffect(() => {
     if (isAuthenticated && userId) {
       // Set up callback for cart updates
       CartConstants.setCartCallback(userId, (items) => {
-        console.log("Cart updated in Services:", items.length, "items");
         setCartCount(items.length);
       });
     } else {
@@ -102,7 +105,6 @@ export default function Services({ setActiveNav }) {
         setServices(response.data.services || []);
       } catch (err) {
         setError(err.message);
-        console.error("Error fetching services:", err);
       } finally {
         setLoading(false);
       }
@@ -119,6 +121,10 @@ export default function Services({ setActiveNav }) {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedService(null);
+  };
+
+  const handleViewDetails = (service) => {
+    navigate(`/service/${service.id}`);
   };
 
   const handleAddToCart = async (serviceData) => {
@@ -294,7 +300,6 @@ export default function Services({ setActiveNav }) {
                   return (
                     <div
                       key={service.id}
-                      onClick={() => handleServiceClick(service)}
                       className={`group relative bg-gradient-to-br from-[#5A6DFF]/15 to-[#00B8C8]/10
                                  backdrop-blur-xl border rounded-lg sm:rounded-xl lg:rounded-2xl
                                  hover:shadow-[0_8px_32px_0_rgba(90,109,255,0.3),inset_0_1px_0_0_rgba(255,255,255,0.1)]
@@ -353,23 +358,17 @@ export default function Services({ setActiveNav }) {
                           {service.description}
                         </p>
 
-                        {/* Price and CTA */}
-                        <div className="relative z-10 flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <span className="bg-green-900 text-white px-2 py-1 rounded-full text-md font-semibold">
-                              KES {service.price}
-                            </span>
-                          </div>
-
+                        {/* Centered View Service Button */}
+                        <div className="relative z-10 flex justify-center mt-auto pt-4">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleServiceClick(service);
+                              handleViewDetails(service);
                             }}
-                            className="bg-[#2a56a8] text-white rounded-full px-4 py-2 text-sm font-semibold hover:bg-blue-700 hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-2"
+                            className="bg-gradient-to-r from-[#5A6DFF] to-[#00B8C8] text-white rounded px-6 py-3 text-sm font-semibold hover:from-[#4A5BEF] hover:to-[#00A8B8] hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl"
                           >
-                            <ShoppingCart className="w-4 h-5" />
-                            {isInCart ? "Update Cart" : "Add to Cart"}
+                            <VisibilityIcon className="w-4 h-4" />
+                            More details
                           </button>
                         </div>
                       </div>
@@ -382,6 +381,7 @@ export default function Services({ setActiveNav }) {
         </div>
       </div>
 
+      {/* Service Modal (if still needed for other functionality) */}
       <Service
         open={isModalOpen}
         onClose={handleCloseModal}
