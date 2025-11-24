@@ -1,399 +1,224 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
+  ChevronLeft,
+  ChevronRight,
   Calendar,
-  Clock,
   MapPin,
+  Clock,
+  FileText,
+  User,
   CreditCard,
-  Eye,
-  DollarSign,
   CheckCircle,
   XCircle,
   AlertCircle,
+  MoreHorizontal,
 } from "lucide-react";
 
-const Bookings = ({
-  data,
-  loading,
-  error,
-  bookings,
-  user, // Make sure this prop is defined
-  onCancelBooking,
-  onPayBooking,
-  onUpdateBooking,
-  cancelLoading,
-  cancelBookingId,
-  updateLoading,
-  updateBookingId,
-}) => {
+const Bookings = ({ data, loading, error, bookings, user }) => {
   const [currentPage, setCurrentPage] = useState(1);
-  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [selectedBooking, setSelectedBooking] = useState(null);
-  const itemsPerPage = 10;
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Combine all bookings from different statuses
+  const allBookings = [
+    ...(bookings?.unpaid || []),
+    ...(bookings?.paid || []),
+    ...(bookings?.completed || []),
+    ...(bookings?.cancelled || []),
+  ];
+
+  // Pagination calculations
+  const totalBookings = allBookings.length;
+  const totalPages = Math.ceil(totalBookings / rowsPerPage);
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const endIndex = Math.min(startIndex + rowsPerPage, totalBookings);
+  const currentBookings = allBookings.slice(startIndex, endIndex);
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
+
+  const handleRowClick = (booking) => {
+    setSelectedBooking(booking);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedBooking(null);
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const formatTime = (timeString) => {
+    const time = new Date(`2000-01-01T${timeString}`);
+    return time.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+
+  const formatDateTime = (dateTimeString) => {
+    const date = new Date(dateTimeString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case "completed":
+        return <CheckCircle className="w-4 h-4 text-green-600" />;
+      case "paid":
+        return <CreditCard className="w-4 h-4 text-blue-600" />;
+      case "cancelled":
+        return <XCircle className="w-4 h-4 text-red-600" />;
+      default:
+        return <AlertCircle className="w-4 h-4 text-amber-600" />;
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "completed":
+        return "bg-green-100 text-green-800";
+      case "paid":
+        return "bg-blue-100 text-blue-800";
+      case "cancelled":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-amber-100 text-amber-800";
+    }
+  };
 
   if (loading && !data) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-electric-blue border-t-transparent mb-4"></div>
-          <p className="text-muted-600 text-lg">Loading your bookings...</p>
-        </div>
+      <div className="flex justify-center items-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="max-w-2xl mx-auto mt-8">
-        <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-6 text-center">
-          <XCircle className="w-12 h-12 text-destructive mx-auto mb-3" />
-          <p className="text-destructive font-medium">{error}</p>
-        </div>
+      <div className="text-center py-8 text-red-600 bg-red-50 rounded-lg mx-4">
+        {error}
       </div>
     );
   }
 
-  const bookingsData = bookings || data?.bookings;
-
-  // Safe user data access
-  const userData = user || data?.user;
-
-  const statusConfig = {
-    unpaid: {
-      color: "warning",
-      bgClass: "bg-warning/10",
-      textClass: "text-warning",
-      borderClass: "border-warning/30",
-      icon: AlertCircle,
-      label: "Unpaid",
-    },
-    paid: {
-      color: "electric-blue",
-      bgClass: "bg-electric-blue/10",
-      textClass: "text-electric-blue",
-      borderClass: "border-electric-blue/30",
-      icon: CreditCard,
-      label: "Paid",
-    },
-    completed: {
-      color: "success",
-      bgClass: "bg-success/10",
-      textClass: "text-success",
-      borderClass: "border-success/30",
-      icon: CheckCircle,
-      label: "Completed",
-    },
-    cancelled: {
-      color: "destructive",
-      bgClass: "bg-destructive/10",
-      textClass: "text-destructive",
-      borderClass: "border-destructive/30",
-      icon: XCircle,
-      label: "Cancelled",
-    },
-  };
-
-  const allBookings = Object.values(bookingsData || {}).flat();
-  const totalPages = Math.ceil(allBookings.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentBookings = allBookings.slice(
-    startIndex,
-    startIndex + itemsPerPage
-  );
-
-  const handleShowDetails = (booking) => {
-    setSelectedBooking(booking);
-    setShowDetailsModal(true);
-  };
-
-  const handleCloseDetails = () => {
-    setShowDetailsModal(false);
-    setSelectedBooking(null);
-  };
-
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
-
-  const renderPaginationItems = () => {
-    const items = [];
-    const maxVisiblePages = 5;
-
-    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-
-    if (endPage - startPage + 1 < maxVisiblePages) {
-      startPage = Math.max(1, endPage - maxVisiblePages + 1);
-    }
-
-    // Previous button
-    items.push(
-      <button
-        key="prev"
-        onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-        disabled={currentPage === 1}
-        className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-          currentPage === 1
-            ? "bg-muted-100 text-muted-400 cursor-not-allowed"
-            : "bg-card hover:bg-electric-blue hover:text-white text-foreground border border-border"
-        }`}
-      >
-        Previous
-      </button>
-    );
-
-    // First page
-    if (startPage > 1) {
-      items.push(
-        <button
-          key={1}
-          onClick={() => handlePageChange(1)}
-          className="px-4 py-2 rounded-lg text-sm font-medium bg-card hover:bg-electric-blue hover:text-white text-foreground border border-border transition-all"
-        >
-          1
-        </button>
-      );
-      if (startPage > 2) {
-        items.push(
-          <span key="start-ellipsis" className="px-2 text-muted-500">
-            ...
-          </span>
-        );
-      }
-    }
-
-    // Page numbers
-    for (let page = startPage; page <= endPage; page++) {
-      items.push(
-        <button
-          key={page}
-          onClick={() => handlePageChange(page)}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-            page === currentPage
-              ? "bg-electric-blue text-white shadow-lg"
-              : "bg-card hover:bg-electric-blue hover:text-white text-foreground border border-border"
-          }`}
-        >
-          {page}
-        </button>
-      );
-    }
-
-    // Last page
-    if (endPage < totalPages) {
-      if (endPage < totalPages - 1) {
-        items.push(
-          <span key="end-ellipsis" className="px-2 text-muted-500">
-            ...
-          </span>
-        );
-      }
-      items.push(
-        <button
-          key={totalPages}
-          onClick={() => handlePageChange(totalPages)}
-          className="px-4 py-2 rounded-lg text-sm font-medium bg-card hover:bg-electric-blue hover:text-white text-foreground border border-border transition-all"
-        >
-          {totalPages}
-        </button>
-      );
-    }
-
-    // Next button
-    items.push(
-      <button
-        key="next"
-        onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-        disabled={currentPage === totalPages}
-        className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-          currentPage === totalPages
-            ? "bg-muted-100 text-muted-400 cursor-not-allowed"
-            : "bg-card hover:bg-electric-blue hover:text-white text-foreground border border-border"
-        }`}
-      >
-        Next
-      </button>
-    );
-
-    return items;
-  };
-
-  const StatusBadge = ({ status }) => {
-    const config = statusConfig[status];
-    const Icon = config.icon;
-
-    return (
-      <span
-        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${config.bgClass} ${config.textClass} border ${config.borderClass}`}
-      >
-        <Icon className="w-3.5 h-3.5" />
-        {config.label}
-      </span>
-    );
-  };
-
   return (
-    <div className="bg-card rounded-xl shadow-sm border border-border p-6 grid max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
-          Bookings Overview
-        </h1>
-        <button className="text-sm text-red-600">
-          Logout, {userData?.username || "User"}!
-        </button>
-      </div>
-      {allBookings.length === 0 ? (
-        <div className="bg-card rounded-2xl shadow-lg border border-border p-12 text-center">
-          <div className="max-w-md mx-auto">
-            <div className="w-20 h-20 bg-electric-blue/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Calendar className="w-10 h-10 text-electric-blue" />
-            </div>
-            <h3 className="text-xl font-semibold text-foreground mb-2">
-              No bookings yet
-            </h3>
-            <p className="text-muted-600">
-              Start exploring our services and make your first booking!
+    <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:px-8">
+      {/* Header */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
+              My Bookings
+            </h1>
+            <p className="text-gray-600 mt-2 text-sm sm:text-base">
+              Manage and view all your service bookings
+            </p>
+          </div>
+          <div className="bg-teal-50 rounded-lg px-4 py-2 border border-teal-200">
+            <p className="text-teal-800 font-semibold text-sm sm:text-base">
+              Total: {totalBookings} bookings
             </p>
           </div>
         </div>
-      ) : (
-        <div className="space-y-6">
-          {/* Desktop Table View */}
-          <div className="hidden lg:block bg-card rounded-2xl shadow-lg border border-border overflow-hidden">
+      </div>
+
+      {/* Bookings Table */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        {allBookings.length === 0 ? (
+          <div className="p-8 text-center">
+            <Calendar className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+            <p className="text-gray-600 text-lg">No bookings found</p>
+            <p className="text-gray-500 mt-2">
+              {user?.username
+                ? `Hi ${user.username}, you have no bookings yet.`
+                : "Your service bookings will appear here."}
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Table - Scrollable on mobile */}
             <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gradient-to-r from-primary to-muted-700">
+              <table className="w-full min-w-[600px]">
+                <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-white">
+                    <th className="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Event Date
+                    </th>
+                    <th className="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Service
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-white">
-                      Date & Time
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-white">
-                      Location
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-white">
-                      Price
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-white">
+                    <th className="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-white">
+                    <th className="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
-                  {currentBookings.map((booking) => (
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {currentBookings.map((booking, index) => (
                     <tr
                       key={booking.id}
-                      className="hover:bg-muted-50 transition-colors"
+                      className="hover:bg-gray-50 cursor-pointer transition-colors"
+                      onClick={() => handleRowClick(booking)}
                     >
-                      <td className="px-6 py-4">
-                        <div>
-                          <div className="font-semibold text-foreground">
-                            {booking.service?.category || "Service"}
-                          </div>
-                          <div className="text-xs text-muted-500 mt-1">
-                            ID: #{booking.id}
-                          </div>
+                      <td className="px-3 sm:px-4 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2 text-sm text-gray-900">
+                          <Calendar className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                          {formatDate(booking.event_date)}
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2 text-sm">
-                          <Calendar className="w-4 h-4 text-electric-blue" />
-                          <div>
-                            <div className="text-foreground font-medium">
-                              {booking.event_date}
-                            </div>
-                            <div className="text-muted-600 text-xs flex items-center gap-1 mt-1">
-                              <Clock className="w-3 h-3" />
-                              {booking.event_time}
-                            </div>
-                          </div>
+                      <td className="px-3 sm:px-4 py-4">
+                        <div className="text-sm text-gray-900 max-w-xs truncate">
+                          {booking.service?.title ||
+                            booking.service?.category ||
+                            "N/A"}
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2 text-sm text-foreground">
-                          <MapPin className="w-4 h-4 text-cool-teal flex-shrink-0" />
-                          <span className="line-clamp-2">
-                            {booking.event_location}
+                      <td className="px-3 sm:px-4 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          {getStatusIcon(booking.status)}
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${getStatusColor(
+                              booking.status
+                            )}`}
+                          >
+                            {booking.status}
                           </span>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-1.5 text-foreground font-semibold">
-                          <DollarSign className="w-4 h-4 text-premium-gold" />
-                          {booking.service?.price
-                            ? `${booking.service.price} KSH`
-                            : "N/A"}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <StatusBadge status={booking.status} />
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            onClick={() => handleShowDetails(booking)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-electric-blue bg-electric-blue/10 hover:bg-electric-blue hover:text-white rounded-lg transition-all border border-electric-blue/30"
-                          >
-                            <Eye className="w-3.5 h-3.5" />
-                            Details
-                          </button>
-                          {booking.status === "unpaid" && (
-                            <>
-                              <button
-                                onClick={() => onPayBooking(booking)}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-success hover:bg-success/90 rounded-lg transition-all shadow-sm"
-                              >
-                                <CreditCard className="w-3.5 h-3.5" />
-                                Pay Now
-                              </button>
-                              <button
-                                onClick={() =>
-                                  onUpdateBooking(booking, booking.service.id)
-                                }
-                                disabled={
-                                  updateLoading &&
-                                  updateBookingId === booking.id
-                                }
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-warning hover:bg-warning/90 rounded-lg transition-all shadow-sm disabled:opacity-50"
-                              >
-                                {updateLoading &&
-                                updateBookingId === booking.id ? (
-                                  <>
-                                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                    Updating...
-                                  </>
-                                ) : (
-                                  "Update"
-                                )}
-                              </button>
-                              <button
-                                onClick={() => onCancelBooking(booking)}
-                                disabled={
-                                  cancelLoading &&
-                                  cancelBookingId === booking.id
-                                }
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-destructive hover:bg-destructive/90 rounded-lg transition-all shadow-sm disabled:opacity-50"
-                              >
-                                {cancelLoading &&
-                                cancelBookingId === booking.id ? (
-                                  <>
-                                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                    Cancelling...
-                                  </>
-                                ) : (
-                                  <>
-                                    <XCircle className="w-3.5 h-3.5" />
-                                    Cancel
-                                  </>
-                                )}
-                              </button>
-                            </>
-                          )}
-                        </div>
+                      <td className="px-3 sm:px-4 py-4 whitespace-nowrap">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRowClick(booking);
+                          }}
+                          className="text-gray-400 hover:text-gray-600 transition-colors"
+                        >
+                          <MoreHorizontal className="w-5 h-5" />
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -401,308 +226,261 @@ const Bookings = ({
               </table>
             </div>
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="px-6 py-4 border-t border-border bg-muted-50">
-                <div className="flex items-center justify-between flex-wrap gap-4">
-                  <div className="text-sm text-muted-600">
-                    Showing{" "}
-                    <span className="font-semibold text-foreground">
-                      {startIndex + 1}
-                    </span>{" "}
-                    to{" "}
-                    <span className="font-semibold text-foreground">
-                      {Math.min(startIndex + itemsPerPage, allBookings.length)}
-                    </span>{" "}
-                    of{" "}
-                    <span className="font-semibold text-foreground">
-                      {allBookings.length}
-                    </span>{" "}
-                    bookings
+            {/* Pagination Footer */}
+            <div className="bg-white px-3 sm:px-4 py-3 border-t border-gray-200">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                {/* Rows info */}
+                <div className="flex items-center gap-3 text-sm text-gray-700 flex-wrap">
+                  <div className="text-xs sm:text-sm">
+                    Showing {startIndex + 1} - {endIndex} of {totalBookings}
                   </div>
-                  <div className="flex items-center gap-2">
-                    {renderPaginationItems()}
+                  <div className="hidden sm:block text-gray-300">|</div>
+                  <div className="text-xs sm:text-sm">
+                    Page {currentPage} of {totalPages}
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
 
-          {/* Mobile Card View */}
-          <div className="lg:hidden space-y-4">
-            {currentBookings.map((booking) => {
-              const config = statusConfig[booking.status];
-              const StatusIcon = config.icon;
+                {/* Pagination controls */}
+                <div className="flex items-center gap-2">
+                  {/* Rows per page selector */}
+                  <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-700">
+                    <label htmlFor="rowsPerPage" className="whitespace-nowrap">
+                      Rows:
+                    </label>
+                    <select
+                      id="rowsPerPage"
+                      value={rowsPerPage}
+                      onChange={(e) => {
+                        setRowsPerPage(Number(e.target.value));
+                        setCurrentPage(1);
+                      }}
+                      className="border border-gray-300 rounded px-2 py-1 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    >
+                      <option value={5}>5</option>
+                      <option value={10}>10</option>
+                      <option value={25}>25</option>
+                      <option value={50}>50</option>
+                    </select>
+                  </div>
 
-              return (
-                <div
-                  key={booking.id}
-                  className="bg-card rounded-xl shadow-lg border border-border overflow-hidden hover:shadow-xl transition-shadow"
-                >
-                  <div className={`h-2 ${config.bgClass}`}></div>
-                  <div className="p-5">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-lg text-foreground mb-1">
-                          {booking.service?.category || "Service"}
-                        </h3>
-                        <p className="text-xs text-muted-500">
-                          ID: #{booking.id}
-                        </p>
-                      </div>
-                      <StatusBadge status={booking.status} />
-                    </div>
+                  {/* Page navigation */}
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="p-1 sm:p-2 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      aria-label="Previous page"
+                    >
+                      <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
+                    </button>
 
-                    <div className="space-y-3 mb-4">
-                      <div className="flex items-center gap-3 text-sm">
-                        <div
-                          className={`w-8 h-8 rounded-lg ${config.bgClass} flex items-center justify-center`}
-                        >
-                          <Calendar className={`w-4 h-4 ${config.textClass}`} />
-                        </div>
-                        <div>
-                          <p className="font-medium text-foreground">
-                            {booking.event_date}
-                          </p>
-                          <p className="text-xs text-muted-600">
-                            {booking.event_time}
-                          </p>
-                        </div>
-                      </div>
+                    {/* Page numbers - responsive */}
+                    <div className="hidden xs:flex items-center gap-1">
+                      {Array.from(
+                        { length: Math.min(3, totalPages) },
+                        (_, i) => {
+                          let pageNum;
+                          if (totalPages <= 3) {
+                            pageNum = i + 1;
+                          } else if (currentPage <= 2) {
+                            pageNum = i + 1;
+                          } else if (currentPage >= totalPages - 1) {
+                            pageNum = totalPages - 2 + i;
+                          } else {
+                            pageNum = currentPage - 1 + i;
+                          }
 
-                      <div className="flex items-center gap-3 text-sm">
-                        <div
-                          className={`w-8 h-8 rounded-lg ${config.bgClass} flex items-center justify-center`}
-                        >
-                          <MapPin className={`w-4 h-4 ${config.textClass}`} />
-                        </div>
-                        <p className="text-foreground flex-1">
-                          {booking.event_location}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-3 text-sm">
-                        <div
-                          className={`w-8 h-8 rounded-lg ${config.bgClass} flex items-center justify-center`}
-                        >
-                          <DollarSign
-                            className={`w-4 h-4 ${config.textClass}`}
-                          />
-                        </div>
-                        <p className="font-semibold text-foreground">
-                          {booking.service?.price
-                            ? `${booking.service.price} KSH`
-                            : "N/A"}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-wrap gap-2 pt-4 border-t border-border">
-                      <button
-                        onClick={() => handleShowDetails(booking)}
-                        className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-medium text-electric-blue bg-electric-blue/10 hover:bg-electric-blue hover:text-white rounded-lg transition-all border border-electric-blue/30"
-                      >
-                        <Eye className="w-4 h-4" />
-                        View Details
-                      </button>
-                      {booking.status === "unpaid" && (
-                        <>
-                          <button
-                            onClick={() => onPayBooking(booking)}
-                            className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-medium text-white bg-success hover:bg-success/90 rounded-lg transition-all shadow-sm"
-                          >
-                            <CreditCard className="w-4 h-4" />
-                            Pay Now
-                          </button>
-                          <button
-                            onClick={() =>
-                              onUpdateBooking(booking, booking.service.id)
-                            }
-                            disabled={
-                              updateLoading && updateBookingId === booking.id
-                            }
-                            className="px-4 py-2.5 text-sm font-medium text-white bg-warning hover:bg-warning/90 rounded-lg transition-all shadow-sm disabled:opacity-50"
-                          >
-                            {updateLoading && updateBookingId === booking.id
-                              ? "Updating..."
-                              : "Update"}
-                          </button>
-                          <button
-                            onClick={() => onCancelBooking(booking)}
-                            disabled={
-                              cancelLoading && cancelBookingId === booking.id
-                            }
-                            className="px-4 py-2.5 text-sm font-medium text-white bg-destructive hover:bg-destructive/90 rounded-lg transition-all shadow-sm disabled:opacity-50"
-                          >
-                            {cancelLoading && cancelBookingId === booking.id
-                              ? "Cancelling..."
-                              : "Cancel"}
-                          </button>
-                        </>
+                          return (
+                            <button
+                              key={pageNum}
+                              onClick={() => handlePageChange(pageNum)}
+                              className={`px-2 py-1 sm:px-3 sm:py-1 rounded text-xs sm:text-sm font-medium transition-colors ${
+                                currentPage === pageNum
+                                  ? "bg-teal-600 text-white"
+                                  : "text-gray-700 hover:bg-gray-100"
+                              }`}
+                            >
+                              {pageNum}
+                            </button>
+                          );
+                        }
                       )}
                     </div>
+
+                    <button
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className="p-1 sm:p-2 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      aria-label="Next page"
+                    >
+                      <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
+                    </button>
                   </div>
                 </div>
-              );
-            })}
-
-            {/* Mobile Pagination */}
-            {totalPages > 1 && (
-              <div className="bg-card rounded-xl shadow-lg border border-border p-4">
-                <div className="text-center text-sm text-muted-600 mb-4">
-                  Page {currentPage} of {totalPages}
-                </div>
-                <div className="flex items-center justify-center gap-2 flex-wrap">
-                  {renderPaginationItems()}
-                </div>
               </div>
-            )}
-          </div>
-        </div>
-      )}
+            </div>
+          </>
+        )}
+      </div>
 
       {/* Booking Details Modal */}
-      {showDetailsModal && selectedBooking && (
+      {isModalOpen && selectedBooking && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex min-h-screen items-center justify-center p-4">
+          <div className="flex min-h-screen items-center justify-center p-3 sm:p-4">
+            {/* Backdrop */}
             <div
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm"
-              onClick={handleCloseDetails}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+              onClick={closeModal}
             ></div>
-            <div className="relative bg-card rounded-2xl shadow-2xl max-w-2xl w-full border border-border overflow-hidden">
-              <div className="bg-gradient-to-r from-primary to-muted-700 px-6 py-5 flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-white">
+
+            {/* Modal */}
+            <div className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-200">
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 sticky top-0 bg-white rounded-t-2xl">
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900">
                   Booking Details
-                </h2>
+                </h3>
                 <button
-                  onClick={handleCloseDetails}
-                  className="text-white hover:bg-white/20 rounded-lg p-2 transition-colors"
+                  onClick={closeModal}
+                  className="text-gray-400 hover:text-gray-600 transition-colors p-1"
                 >
                   <XCircle className="w-6 h-6" />
                 </button>
               </div>
 
-              <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-muted-50 rounded-lg p-4">
-                    <label className="text-xs font-medium text-muted-600 uppercase tracking-wide">
-                      Booking ID
-                    </label>
-                    <p className="text-foreground font-bold text-lg mt-1">
-                      #{selectedBooking.id}
-                    </p>
+              {/* Content */}
+              <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+                {/* Status Badge */}
+                <div className="flex justify-between items-start flex-wrap gap-3">
+                  <div className="flex items-center gap-2">
+                    {getStatusIcon(selectedBooking.status)}
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm font-medium capitalize ${getStatusColor(
+                        selectedBooking.status
+                      )}`}
+                    >
+                      {selectedBooking.status}
+                    </span>
                   </div>
-                  <div className="bg-muted-50 rounded-lg p-4">
-                    <label className="text-xs font-medium text-muted-600 uppercase tracking-wide">
-                      Status
-                    </label>
-                    <div className="mt-2">
-                      <StatusBadge status={selectedBooking.status} />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-muted-50 rounded-lg p-4">
-                  <label className="text-xs font-medium text-muted-600 uppercase tracking-wide">
-                    Service
-                  </label>
-                  <p className="text-foreground font-semibold text-lg mt-1">
-                    {selectedBooking.service?.category || "Service"}
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-electric-blue/5 rounded-lg p-4 border border-electric-blue/20">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Calendar className="w-5 h-5 text-electric-blue" />
-                      <label className="text-xs font-medium text-electric-blue uppercase tracking-wide">
-                        Event Date
-                      </label>
-                    </div>
-                    <p className="text-foreground font-semibold">
-                      {selectedBooking.event_date}
-                    </p>
-                  </div>
-                  <div className="bg-cool-teal/5 rounded-lg p-4 border border-cool-teal/20">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Clock className="w-5 h-5 text-cool-teal" />
-                      <label className="text-xs font-medium text-cool-teal uppercase tracking-wide">
-                        Event Time
-                      </label>
-                    </div>
-                    <p className="text-foreground font-semibold">
-                      {selectedBooking.event_time}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="bg-muted-50 rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <MapPin className="w-5 h-5 text-premium-gold" />
-                    <label className="text-xs font-medium text-muted-600 uppercase tracking-wide">
-                      Event Location
-                    </label>
-                  </div>
-                  <p className="text-foreground font-medium">
-                    {selectedBooking.event_location}
-                  </p>
-                </div>
-
-                {selectedBooking.service?.price && (
-                  <div className="bg-premium-gold/10 rounded-lg p-4 border-2 border-premium-gold/30">
-                    <div className="flex items-center gap-2 mb-2">
-                      <DollarSign className="w-5 h-5 text-premium-gold" />
-                      <label className="text-xs font-medium text-premium-gold uppercase tracking-wide">
-                        Total Price
-                      </label>
-                    </div>
-                    <p className="text-foreground font-bold text-2xl">
-                      KSH {selectedBooking.service.price}
-                    </p>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
-                  <div>
-                    <label className="text-xs font-medium text-muted-600 uppercase tracking-wide">
-                      Created At
-                    </label>
-                    <p className="text-foreground text-sm mt-1">
-                      {new Date(selectedBooking.created_at).toLocaleString()}
-                    </p>
-                  </div>
-                  {selectedBooking.updated_at && (
-                    <div>
-                      <label className="text-xs font-medium text-muted-600 uppercase tracking-wide">
-                        Last Updated
-                      </label>
-                      <p className="text-foreground text-sm mt-1">
-                        {new Date(selectedBooking.updated_at).toLocaleString()}
-                      </p>
+                  {selectedBooking.invoice_number && (
+                    <div className="bg-gray-100 rounded-lg px-3 py-1">
+                      <span className="text-sm text-gray-700 font-mono">
+                        Invoice: {selectedBooking.invoice_number}
+                      </span>
                     </div>
                   )}
                 </div>
-              </div>
 
-              <div className="px-6 py-4 bg-muted-50 border-t border-border flex items-center gap-3 justify-end">
-                <button
-                  onClick={handleCloseDetails}
-                  className="px-6 py-2.5 text-sm font-medium text-foreground bg-white hover:bg-muted-100 rounded-lg transition-colors border border-border"
-                >
-                  Close
-                </button>
-                {selectedBooking?.status === "unpaid" && (
+                {/* Service Information */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                      <User className="w-4 h-4" />
+                      Service Information
+                    </h4>
+                    <div className="space-y-2 text-sm">
+                      <div>
+                        <span className="font-medium text-gray-700">
+                          Service:
+                        </span>
+                        <p className="text-gray-900 mt-1">
+                          {selectedBooking.service?.title ||
+                            selectedBooking.service?.category ||
+                            "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-700">
+                          Category:
+                        </span>
+                        <p className="text-gray-900 mt-1 capitalize">
+                          {selectedBooking.service?.category || "N/A"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                      <Calendar className="w-4 h-4" />
+                      Event Details
+                    </h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-gray-400" />
+                        <span className="font-medium text-gray-700">Date:</span>
+                        <span className="text-gray-900">
+                          {formatDate(selectedBooking.event_date)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-gray-400" />
+                        <span className="font-medium text-gray-700">Time:</span>
+                        <span className="text-gray-900">
+                          {formatTime(selectedBooking.event_time)}
+                        </span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <MapPin className="w-4 h-4 text-gray-400 mt-0.5" />
+                        <div>
+                          <span className="font-medium text-gray-700">
+                            Location:
+                          </span>
+                          <p className="text-gray-900 mt-1">
+                            {selectedBooking.event_location}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Booking Metadata */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <FileText className="w-4 h-4" />
+                    Booking Information
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="font-medium text-gray-700">
+                        Booking ID:
+                      </span>
+                      <p className="text-gray-900 font-mono mt-1">
+                        {selectedBooking.id}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700">
+                        Booked At:
+                      </span>
+                      <p className="text-gray-900 mt-1">
+                        {formatDateTime(selectedBooking.booked_at)}
+                      </p>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <span className="font-medium text-gray-700">User:</span>
+                      <p className="text-gray-900 mt-1">
+                        {user?.username || user?.email || "N/A"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
                   <button
-                    onClick={() => {
-                      onPayBooking(selectedBooking);
-                      handleCloseDetails();
-                    }}
-                    className="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-white bg-success hover:bg-success/90 rounded-lg transition-all shadow-sm"
+                    onClick={closeModal}
+                    className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
                   >
-                    <CreditCard className="w-4 h-4" />
-                    Make Payment
+                    Close
                   </button>
-                )}
+                  {selectedBooking.status === "unpaid" && (
+                    <button className="flex-1 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium">
+                      Make Payment
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
