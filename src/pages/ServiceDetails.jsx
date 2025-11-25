@@ -9,7 +9,12 @@ import {
   AlertCircle,
   Mail,
   MessageCircle,
+  Twitter,
+  Facebook,
+  Instagram,
 } from "lucide-react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faTiktok } from "@fortawesome/free-brands-svg-icons";
 import API from "../api";
 
 export default function ServiceDetails() {
@@ -18,6 +23,14 @@ export default function ServiceDetails() {
   const [service, setService] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Social media links from environment variables
+  const socialLinks = {
+    twitter: import.meta.env.VITE_TWITTER,
+    facebook: import.meta.env.VITE_FACEBOOK,
+    instagram: import.meta.env.VITE_INSTAGRAM,
+    tiktok: import.meta.env.VITE_TIKTOK,
+  };
 
   const capitalize = (str) => {
     if (!str) return "";
@@ -48,17 +61,25 @@ export default function ServiceDetails() {
     broadcasting: { label: "Digital Broadcasting" },
   };
 
-  // Social media icons
-  const SocialIcon = ({ children, href, label }) => (
+  // Social media icons with Lucide icons
+  const SocialIcon = ({ icon: Icon, href, label, color = "text-white" }) => (
     <a
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="w-10 h-10 bg-slate-700 hover:bg-blue-600 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 border border-slate-600"
+      className={`w-10 h-10 bg-slate-700 hover:bg-blue-600 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 border border-slate-600 group`}
       aria-label={label}
     >
-      {children}
+      <Icon size={18} className={`${color} group-hover:text-white`} />
     </a>
+  );
+
+  // Special TikTok icon component since it uses FontAwesome
+  const TikTokIcon = ({ color = "text-white" }) => (
+    <FontAwesomeIcon
+      icon={faTiktok}
+      className={`${color} group-hover:text-white text-sm`}
+    />
   );
 
   // Fetch service details
@@ -400,29 +421,44 @@ export default function ServiceDetails() {
             {/* Social Media */}
             <div className="border-t border-slate-700/50 pt-3 sm:pt-4">
               <p className="text-xs sm:text-sm font-semibold text-slate-300 mb-2 sm:mb-3">
-                Social Media
+                Follow Us
               </p>
               <div className="flex gap-2 sm:gap-3">
-                <SocialIcon href="#" label="Twitter">
-                  <span className="text-white font-bold text-xs sm:text-sm">
-                    𝕏
-                  </span>
-                </SocialIcon>
-                <SocialIcon href="#" label="Facebook">
-                  <span className="text-white font-bold text-xs sm:text-sm">
-                    f
-                  </span>
-                </SocialIcon>
-                <SocialIcon href="#" label="Instagram">
-                  <span className="text-white font-bold text-xs sm:text-sm">
-                    📷
-                  </span>
-                </SocialIcon>
-                <SocialIcon href="#" label="TikTok">
-                  <span className="text-white font-bold text-xs sm:text-sm">
-                    ♪
-                  </span>
-                </SocialIcon>
+                {socialLinks.twitter && (
+                  <SocialIcon
+                    icon={Twitter}
+                    href={socialLinks.twitter}
+                    label="Twitter"
+                    color="text-blue-400"
+                  />
+                )}
+                {socialLinks.facebook && (
+                  <SocialIcon
+                    icon={Facebook}
+                    href={socialLinks.facebook}
+                    label="Facebook"
+                    color="text-blue-500"
+                  />
+                )}
+                {socialLinks.instagram && (
+                  <SocialIcon
+                    icon={Instagram}
+                    href={socialLinks.instagram}
+                    label="Instagram"
+                    color="text-pink-500"
+                  />
+                )}
+                {socialLinks.tiktok && (
+                  <a
+                    href={socialLinks.tiktok}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 bg-slate-700 hover:bg-blue-600 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 border border-slate-600 group"
+                    aria-label="TikTok"
+                  >
+                    <TikTokIcon color="text-white" />
+                  </a>
+                )}
               </div>
             </div>
           </div>

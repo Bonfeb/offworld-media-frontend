@@ -6,14 +6,14 @@ import {
   useTheme,
   useMediaQuery,
 } from "@mui/material";
-import { Link } from "react-router-dom";
 import {
   Twitter,
   Facebook,
   Instagram,
   YouTube,
-  MusicVideo,
 } from "@mui/icons-material";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faTiktok } from "@fortawesome/free-brands-svg-icons";
 
 const Footer = () => {
   const theme = useTheme();
@@ -29,28 +29,33 @@ const Footer = () => {
   const socialLinks = [
     {
       name: "Twitter",
+      url: twitter,
       icon: Twitter,
-      url: "https://twitter.com",
+      component: "mui"
     },
     {
       name: "Facebook",
+      url: facebook,
       icon: Facebook,
-      url: "https://facebook.com",
+      component: "mui"
     },
     {
       name: "Instagram",
+      url: instagram,
       icon: Instagram,
-      url: "https://instagram.com",
+      component: "mui"
     },
     {
       name: "TikTok",
-      icon: MusicVideo,
-      url: "https://tiktok.com",
+      url: tiktok,
+      icon: faTiktok,
+      component: "fontawesome"
     },
     {
       name: "YouTube",
+      url: youtube,
       icon: YouTube,
-      url: "https://youtube.com",
+      component: "mui"
     },
   ];
 
@@ -187,8 +192,8 @@ const Footer = () => {
                 {socialLinks.map((social, index) => (
                   <IconButton
                     key={index}
-                    component={Link}
-                    to={social.url}
+                    component="a"
+                    href={social.url}
                     target="_blank"
                     rel="noopener noreferrer"
                     sx={{
@@ -208,15 +213,24 @@ const Footer = () => {
                     }}
                     size="small"
                   >
-                    <social.icon
-                      sx={{
-                        fontSize: {
-                          xs: 16,
-                          sm: 18,
-                          md: 20,
-                        },
-                      }}
-                    />
+                    {social.component === "fontawesome" ? (
+                      <FontAwesomeIcon 
+                        icon={social.icon} 
+                        style={{
+                          fontSize: isMobile ? "16px" : isTablet ? "18px" : "20px"
+                        }}
+                      />
+                    ) : (
+                      <social.icon
+                        sx={{
+                          fontSize: {
+                            xs: 16,
+                            sm: 18,
+                            md: 20,
+                          },
+                        }}
+                      />
+                    )}
                   </IconButton>
                 ))}
               </Box>
