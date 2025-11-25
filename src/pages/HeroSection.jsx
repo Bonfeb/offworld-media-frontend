@@ -500,11 +500,8 @@ export default function HeroSection({ setActiveNav }) {
         {/* ✅ Right Section — Announcements */}
         <div className="space-y-6 sm:space-y-8 lg:space-y-10 order-2 lg:order-2">
           {/* ✅ Title - Responsive Text Sizing */}
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-[#b2b9d3] leading-tight sm:leading-tight">
-            Your go to
-            <span className="block bg-gradient-to-r from-[#5A6DFF] to-[#00B8C8] bg-clip-text text-transparent mt-1 sm:mt-2">
-              media company
-            </span>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight sm:leading-tight">
+            Your go to media company
           </h1>
 
           {/* ✅ CTA Buttons - Responsive Stacking */}
