@@ -6,6 +6,9 @@ import {
   Calendar,
   Megaphone,
   AlertCircle,
+  X,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { useScrollVisibility } from "../hooks/useScrollVisibility";
 import { CounterCard } from "../components/CounterCard";
@@ -78,6 +81,11 @@ export default function HeroSection({ setActiveNav }) {
   const [loading, setLoading] = useState(true);
   const [announcementsLoading, setAnnouncementsLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // New state for full screen image viewer
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [fullScreenIndex, setFullScreenIndex] = useState(0);
+
   const { ref, isVisible } = useScrollVisibility({ threshold: 0.3 });
 
   // Fetch images from API endpoint
@@ -189,6 +197,52 @@ export default function HeroSection({ setActiveNav }) {
     }
   };
 
+  // Full screen image functions
+  const openFullScreen = (index) => {
+    setFullScreenIndex(index);
+    setIsFullScreen(true);
+    // Disable body scroll when full screen is open
+    document.body.style.overflow = "hidden";
+  };
+
+  const closeFullScreen = () => {
+    setIsFullScreen(false);
+    // Re-enable body scroll
+    document.body.style.overflow = "unset";
+  };
+
+  const nextFullScreenSlide = () => {
+    setFullScreenIndex((prev) => (prev + 1) % slides.length);
+  };
+
+  const prevFullScreenSlide = () => {
+    setFullScreenIndex((prev) => (prev - 1 + slides.length) % slides.length);
+  };
+
+  // Handle keyboard navigation in full screen mode
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!isFullScreen) return;
+
+      switch (e.key) {
+        case "Escape":
+          closeFullScreen();
+          break;
+        case "ArrowLeft":
+          prevFullScreenSlide();
+          break;
+        case "ArrowRight":
+          nextFullScreenSlide();
+          break;
+        default:
+          break;
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isFullScreen, slides.length]);
+
   // Announcements functions
   const nextAnnouncement = () => {
     if (announcements.length > 0) {
@@ -206,10 +260,10 @@ export default function HeroSection({ setActiveNav }) {
 
   // Auto-slide for images
   useEffect(() => {
-    if (slides.length === 0) return;
+    if (slides.length === 0 || isFullScreen) return;
     const interval = setInterval(nextSlide, 5000);
     return () => clearInterval(interval);
-  }, [slides.length]);
+  }, [slides.length, isFullScreen]);
 
   // Auto-rotate announcements
   useEffect(() => {
@@ -243,6 +297,78 @@ export default function HeroSection({ setActiveNav }) {
         <div className="absolute -bottom-4 left-1/4 w-48 h-48 md:w-64 md:h-64 lg:w-96 lg:h-96 bg-[#00B8C8]/20 rounded-full mix-blend-multiply filter blur-xl md:blur-2xl lg:blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
         <div className="absolute top-1/2 left-1/2 w-48 h-48 md:w-64 md:h-64 lg:w-96 lg:h-96 bg-[#FF6B4A]/20 rounded-full mix-blend-multiply filter blur-xl md:blur-2xl lg:blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
       </div>
+
+      {/* ✅ Full Screen Image Viewer */}
+      {isFullScreen && slides.length > 0 && (
+        <div className="fixed inset-0 bg-black/95 backdrop-blur-xl z-50 flex items-center justify-center">
+          {/* Close Button */}
+          <button
+            onClick={closeFullScreen}
+            className="absolute top-4 right-4 sm:top-6 sm:right-6 z-50 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 sm:p-3 transition-all backdrop-blur-md border border-white/20"
+            aria-label="Close full screen"
+          >
+            <X size={24} className="sm:w-6 sm:h-6" />
+          </button>
+
+          {/* Navigation Arrows */}
+          {slides.length > 1 && (
+            <>
+              <button
+                onClick={prevFullScreenSlide}
+                className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 z-50 bg-black/50 hover:bg-black/70 text-white rounded-full p-3 sm:p-4 transition-all backdrop-blur-md border border-white/20 hover:scale-110"
+                aria-label="Previous image"
+              >
+                <ChevronLeft size={28} className="sm:w-8 sm:h-8" />
+              </button>
+
+              <button
+                onClick={nextFullScreenSlide}
+                className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 z-50 bg-black/50 hover:bg-black/70 text-white rounded-full p-3 sm:p-4 transition-all backdrop-blur-md border border-white/20 hover:scale-110"
+                aria-label="Next image"
+              >
+                <ChevronRight size={28} className="sm:w-8 sm:h-8" />
+              </button>
+            </>
+          )}
+
+          {/* Image Counter */}
+          <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 bg-black/50 backdrop-blur-md text-white px-4 py-2 rounded-full border border-white/20 text-sm sm:text-base">
+            {fullScreenIndex + 1} / {slides.length}
+          </div>
+
+          {/* Main Image */}
+          <div className="relative w-full h-full max-w-7xl max-h-[90vh] mx-4 sm:mx-8 flex items-center justify-center">
+            <img
+              src={slides[fullScreenIndex].src}
+              alt={slides[fullScreenIndex].alt}
+              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+            />
+          </div>
+
+          {/* Thumbnail Strip */}
+          {slides.length > 1 && (
+            <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 flex space-x-2 sm:space-x-3 max-w-full overflow-x-auto px-4 py-2 bg-black/30 backdrop-blur-md rounded-2xl border border-white/20">
+              {slides.map((slide, index) => (
+                <button
+                  key={slide.id}
+                  onClick={() => setFullScreenIndex(index)}
+                  className={`flex-shrink-0 w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                    index === fullScreenIndex
+                      ? "border-blue-400 scale-110"
+                      : "border-white/30 hover:border-white/60"
+                  }`}
+                >
+                  <img
+                    src={slide.src}
+                    alt={slide.alt}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ✅ GLASS HERO CONTAINER - Responsive Layout */}
       <div
@@ -279,18 +405,38 @@ export default function HeroSection({ setActiveNav }) {
             slides.map((slide, index) => (
               <div
                 key={slide.id}
-                className={`absolute inset-0 w-full h-full transition-opacity duration-500 ${
+                className={`absolute inset-0 w-full h-full transition-opacity duration-500 cursor-pointer ${
                   index === currentSlide ? "opacity-100" : "opacity-0"
                 }`}
+                onClick={() => openFullScreen(index)}
               >
                 <img
                   src={slide.src}
                   alt={slide.alt}
-                  className="w-full h-full object-cover rounded-2xl lg:rounded-3xl"
+                  className="w-full h-full object-cover rounded-2xl lg:rounded-3xl hover:opacity-95 transition-opacity"
                   onError={(e) => {
                     e.target.style.display = "none";
                   }}
                 />
+
+                {/* Click to zoom hint on hover */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity bg-black/20">
+                  <div className="bg-black/50 text-white rounded-full p-3 backdrop-blur-sm">
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m0 0l3-3m-3 3l-3-3"
+                      />
+                    </svg>
+                  </div>
+                </div>
               </div>
             ))}
 
