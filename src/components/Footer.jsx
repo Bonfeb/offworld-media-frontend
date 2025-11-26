@@ -6,12 +6,7 @@ import {
   useTheme,
   useMediaQuery,
 } from "@mui/material";
-import {
-  Twitter,
-  Facebook,
-  Instagram,
-  YouTube,
-} from "@mui/icons-material";
+import { Twitter, Facebook, Instagram, YouTube } from "@mui/icons-material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTiktok } from "@fortawesome/free-brands-svg-icons";
 
@@ -31,31 +26,31 @@ const Footer = () => {
       name: "Twitter",
       url: twitter,
       icon: Twitter,
-      component: "mui"
+      component: "mui",
     },
     {
       name: "Facebook",
       url: facebook,
       icon: Facebook,
-      component: "mui"
+      component: "mui",
     },
     {
       name: "Instagram",
       url: instagram,
       icon: Instagram,
-      component: "mui"
+      component: "mui",
     },
     {
       name: "TikTok",
       url: tiktok,
       icon: faTiktok,
-      component: "fontawesome"
+      component: "fontawesome",
     },
     {
       name: "YouTube",
       url: youtube,
       icon: YouTube,
-      component: "mui"
+      component: "mui",
     },
   ];
 
@@ -176,7 +171,7 @@ const Footer = () => {
                     display: { xs: "none", sm: "block" },
                   }}
                 >
-                  Follow us:
+                  Follow & Contact us:
                 </Typography>
                 <Typography
                   variant="body2"
@@ -187,7 +182,7 @@ const Footer = () => {
                     display: { xs: "block", sm: "none" },
                   }}
                 >
-                  Follow:
+                  Follow & Contact us:
                 </Typography>
                 {socialLinks.map((social, index) => (
                   <IconButton
@@ -214,10 +209,14 @@ const Footer = () => {
                     size="small"
                   >
                     {social.component === "fontawesome" ? (
-                      <FontAwesomeIcon 
-                        icon={social.icon} 
+                      <FontAwesomeIcon
+                        icon={social.icon}
                         style={{
-                          fontSize: isMobile ? "16px" : isTablet ? "18px" : "20px"
+                          fontSize: isMobile
+                            ? "16px"
+                            : isTablet
+                            ? "18px"
+                            : "20px",
                         }}
                       />
                     ) : (

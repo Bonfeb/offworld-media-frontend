@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Route, Routes } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { Route, Routes, useNavigate } from "react-router-dom";
 import "./index.css";
 import Home from "./pages/Home";
 import Cart from "./pages/Cart";
@@ -10,8 +10,11 @@ import ContactUs from "./modals/ContactUs";
 import { AuthProvider } from "./context/AuthContext";
 import ClientDashboard from "./pages/customer/ClientDashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
-
-// Import Admin Sub-components
+import SignIn from "../src/components/auth/SignIn";
+import SignUp from "./components/auth/SignUp";
+import ForgotPassword from "./components/auth/ForgotPassword";
+import ResetPassword from "./components/auth/ResetPassword";
+import ChangePassword from "./components/auth/ChangePassword";
 import DashboardContent from "./pages/admin/DashboardContent";
 import AdminServices from "./pages/admin/services/AdminServices";
 import AdminUsers from "./pages/admin/AdminUsers";
@@ -33,14 +36,101 @@ function App() {
   const [activeNav, setActiveNav] = useState("Home");
 
   const [contactModalOpen, setContactModalOpen] = useState(false);
+  const [isSignInOpen, setIsSignInOpen] = useState(false);
+  const [isSignUpOpen, setIsSignUpOpen] = useState(false);
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
+
+  const [tapCount, setTapCount] = useState(0);
+  const tapTimeoutRef = useRef(null);
+  const [showAdminAccess, setShowAdminAccess] = useState(false);
+
   const handleOpenContactModal = () => setContactModalOpen(true);
   const handleCloseContactModal = () => setContactModalOpen(false);
+  
+  const handleOpenSignIn = () => setIsSignInOpen(true);
+  const handleCloseSignIn = () => setIsSignInOpen(false);
+  
+  const handleOpenSignUp = () => setIsSignUpOpen(true);
+  const handleCloseSignUp = () => setIsSignUpOpen(false);
+  
+  const handleOpenForgotPassword = () => setIsForgotPasswordOpen(true);
+  const handleCloseForgotPassword = () => setIsForgotPasswordOpen(false);
 
   const handleBackToHome = () => setCurrentPage("home");
   const handleCartClick = () => setCurrentPage("cart");
   const handleCheckout = () => setCurrentPage("checkout");
   const handleContinueToBook = () => setCurrentPage("book");
   const handleReturnToCart = () => setCurrentPage("cart");
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Check for Ctrl+Alt+A combination
+      if (e.ctrlKey && e.altKey && e.key.toLowerCase() === 'a') {
+        e.preventDefault();
+        setIsSignInOpen(true); // 👉 OPEN SIGN-IN MODAL
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  useEffect(() => {
+    const handleMobileTap = () => {
+      setTapCount(prev => {
+        const newCount = prev + 1;
+        
+        // Clear existing timeout
+        if (tapTimeoutRef.current) {
+          clearTimeout(tapTimeoutRef.current);
+        }
+        
+        // Set new timeout to reset counter
+        tapTimeoutRef.current = setTimeout(() => {
+          setTapCount(0);
+          setShowAdminAccess(false);
+        }, 2000); // Reset after 2 seconds
+        
+        // Show admin access on triple tap
+        if (newCount >= 3) {
+          setShowAdminAccess(true);
+          setTapCount(0);
+        }
+        
+        return newCount;
+      });
+    };
+
+    // Add click listener to footer (discreet location)
+    const footer = document.querySelector('footer');
+    if (footer) {
+      footer.addEventListener('click', handleMobileTap);
+      return () => footer.removeEventListener('click', handleMobileTap);
+    }
+  }, []);
+
+  const handleSignInSuccess = () => {
+    handleCloseSignIn();
+    navigate("/admin-dashboard");
+  };
+
+  const handleSwitchToSignUp = () => {
+    handleCloseSignIn();
+    handleOpenSignUp();
+  };
+
+  const handleSwitchToForgotPassword = () => {
+    handleCloseSignIn();
+    handleOpenForgotPassword();
+  };
+
+  const handleSwitchToSignIn = () => {
+    handleCloseSignUp();
+    handleCloseForgotPassword();
+    handleOpenSignIn();
+  };
 
   return (
     <>
@@ -119,7 +209,28 @@ function App() {
           </Routes>
         </main>
 
+        {/* Render all modals */}
         <ContactUs open={contactModalOpen} onClose={handleCloseContactModal} />
+        
+        <SignIn 
+          isOpen={isSignInOpen} 
+          onClose={handleCloseSignIn}
+          onSignInSuccess={handleSignInSuccess}
+          onSwitchToSignUp={handleSwitchToSignUp}
+          onSwitchToForgotPassword={handleSwitchToForgotPassword}
+        />
+        
+        <SignUp 
+          isOpen={isSignUpOpen} 
+          onClose={handleCloseSignUp}
+          onSwitchToSignIn={handleSwitchToSignIn}
+        />
+        
+        <ForgotPassword 
+          open={isForgotPasswordOpen} 
+          onClose={handleCloseForgotPassword}
+          onSwitchToSignIn={handleSwitchToSignIn}
+        />
 
         <Footer />
       </AuthProvider>

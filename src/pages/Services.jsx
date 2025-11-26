@@ -8,6 +8,9 @@ import {
   Users,
   TrendingUp,
   ShoppingCart,
+  CreditCard,
+  Phone,
+  AlertTriangle,
 } from "lucide-react";
 import { Snackbar, Alert, AlertTitle } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -32,6 +35,12 @@ export default function Services({ setActiveNav }) {
   const { userId, isAuthenticated } = useContext(AuthContext);
 
   const navigate = useNavigate();
+
+  // Payment information
+  const TILL_NUMBER = "4323716";
+  const PAYBILL_NUMBER = "400200";
+  const ACCOUNT_NUMBER = "1077483";
+
   // Initialize cart and set up callback
   useEffect(() => {
     if (isAuthenticated && userId) {
@@ -258,12 +267,8 @@ export default function Services({ setActiveNav }) {
           {/* Header Section */}
           <div className="text-center space-y-2 sm:space-y-3 lg:space-y-4 xl:space-y-6 mb-6 sm:mb-8 lg:mb-10 xl:mb-12">
             <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-white drop-shadow-[0_2px_8px_rgba(90,109,255,0.3)]">
-              Our Services
+              Services we offer
             </h2>
-            <p className="text-xs sm:text-sm lg:text-base xl:text-lg text-[#D5D8E0] max-w-xs sm:max-w-md md:max-w-xl lg:max-w-2xl mx-auto drop-shadow-sm px-2 sm:px-4">
-              Comprehensive solutions tailored to your needs. We deliver
-              excellence across all digital disciplines.
-            </p>
           </div>
 
           {/* Services Grid */}
@@ -357,26 +362,83 @@ export default function Services({ setActiveNav }) {
                         <p className="text-sm sm:text-base text-[#D5D8E0] leading-relaxed sm:leading-relaxed group-hover:text-white/90 transition-colors duration-300 flex-1 mb-4 line-clamp-3">
                           {service.description}
                         </p>
-
-                        {/* Centered View Service Button */}
-                        <div className="relative z-10 flex justify-center mt-auto pt-4">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleViewDetails(service);
-                            }}
-                            className="bg-gradient-to-r from-[#5A6DFF] to-[#00B8C8] text-white rounded px-6 py-3 text-sm font-semibold hover:from-[#4A5BEF] hover:to-[#00A8B8] hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl"
-                          >
-                            <VisibilityIcon className="w-4 h-4" />
-                            More details
-                          </button>
-                        </div>
                       </div>
                     </div>
                   );
                 })}
               </div>
             )}
+          </div>
+
+          {/* Payment Information Section - Simplified */}
+          <div className="mt-12 sm:mt-16 lg:mt-20">
+            <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl sm:rounded-2xl p-6 sm:p-8 border border-slate-700/50 shadow-xl">
+              <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-white text-center mb-6 flex items-center justify-center gap-3">
+                <CreditCard className="text-blue-400" size={24} />
+                Payment Information
+              </h3>
+
+              {/* Simple Payment Numbers - Always same row */}
+              <div className="flex flex-row justify-center items-center gap-4 sm:gap-8 mb-6">
+                {/* Till Number */}
+                <div className="text-center flex-1 max-w-[140px] sm:max-w-none">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <Phone size={16} className="text-green-400" />
+                    <span className="text-xs sm:text-sm font-semibold text-slate-300">
+                      Till Number
+                    </span>
+                  </div>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold text-white font-mono">
+                    {TILL_NUMBER}
+                  </p>
+                </div>
+
+                {/* Vertical Divider */}
+                <div className="w-px h-8 sm:h-12 bg-slate-600"></div>
+
+                {/* Paybill Number */}
+                <div className="text-center flex-1 max-w-[160px] sm:max-w-none">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <CreditCard size={16} className="text-green-400" />
+                    <span className="text-xs sm:text-sm font-semibold text-slate-300">
+                      Paybill
+                    </span>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-lg sm:text-xl lg:text-2xl font-bold text-white font-mono">
+                      {PAYBILL_NUMBER}
+                    </p>
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-xs text-slate-400">Account:</span>
+                      <span className="text-xs sm:text-sm font-bold text-white font-mono">
+                        {ACCOUNT_NUMBER}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Simple Disclaimer */}
+              <div className="bg-amber-900/20 border border-amber-500/30 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle
+                    size={18}
+                    className="text-amber-400 mt-0.5 flex-shrink-0"
+                  />
+                  <div>
+                    <p className="text-sm text-amber-100 font-medium mb-1">
+                      Important Payment Notice
+                    </p>
+                    <p className="text-xs text-amber-200">
+                      Payments must only be made to the official Till Number or
+                      Paybill Number shown above. Always preserve your
+                      transaction details as proof of payment. Do not make
+                      payments to any other numbers.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

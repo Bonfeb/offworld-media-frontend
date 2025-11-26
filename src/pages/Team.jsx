@@ -147,7 +147,7 @@ export default function Team() {
   }
 
   return (
-    <div className="relative py-8 sm:py-12 lg:py-16 bg-[#2F364D] overflow-hidden">
+    <div className="relative py-1 sm:py-12 lg:py-16 bg-[#2F364D] overflow-hidden">
       {/* Background Effects */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-1/3 right-1/3 w-48 h-48 sm:w-64 sm:h-64 lg:w-80 lg:h-80 xl:w-96 xl:h-96 bg-[#5A6DFF]/15 rounded-full mix-blend-screen filter blur-xl lg:blur-2xl xl:blur-3xl opacity-40 animate-blob"></div>
@@ -161,12 +161,8 @@ export default function Team() {
           {/* Header */}
           <div className="text-center mb-12 lg:mb-16">
             <h2 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-4 lg:mb-6 drop-shadow-[0_2px_8px_rgba(90,109,255,0.3)]">
-              Meet Our Expert Team
+              Our Team
             </h2>
-            <p className="text-[#a2aac7] text-base sm:text-lg lg:text-xl max-w-2xl lg:max-w-3xl mx-auto px-4">
-              Our talented team of creative professionals bringing your vision
-              to life through exceptional media production.
-            </p>
           </div>
 
           {/* Carousel */}

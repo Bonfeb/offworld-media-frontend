@@ -18,7 +18,7 @@ export default function Contact({ onOpenContact, setActiveNav }) {
     {
       icon: MapPin,
       label: "Address",
-      value: "9VG4+RJG Water Sports Grounds, Prison Road, Kilifi",
+      value: "9VG4+RJG Water Sports Grounds, Off Prison Road, Kilifi",
       link: "https://maps.app.goo.gl/WPtjh9RXR55yWS2S9",
     },
   ];
@@ -98,27 +98,6 @@ export default function Contact({ onOpenContact, setActiveNav }) {
                   );
                 })}
               </div>
-
-              {/* CTA Button - Responsive */}
-              <motion.button
-                onClick={onOpenContact}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                className="
-                  inline-flex items-center justify-center gap-2 
-                  px-4 py-2.5 sm:px-5 sm:py-3 lg:px-6 lg:py-3
-                  bg-gradient-to-r from-blue-700 to-blue-800 
-                  hover:from-blue-600 hover:to-blue-700 
-                  text-white rounded-lg sm:rounded-xl 
-                  font-medium transition-all duration-200
-                  shadow-lg shadow-blue-900/40
-                  w-full sm:w-auto
-                  text-sm sm:text-base
-                "
-              >
-                Contact us →
-              </motion.button>
             </div>
           </div>
 
@@ -142,7 +121,7 @@ export default function Contact({ onOpenContact, setActiveNav }) {
                 allowFullScreen=""
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
-                title="Water Sports Ground"
+                title="Kilifi Water Sports Ground"
               ></iframe>
             </motion.div>
           </div>

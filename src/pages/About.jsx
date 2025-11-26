@@ -19,7 +19,7 @@ export default function About() {
   ];
 
   return (
-    <section className="pt-2 bg-[#2F364D] text-[#1A1C23] py-8 sm:py-12 lg:py-16">
+    <section className="bg-[#2F364D] text-[#1A1C23] py-2 sm:py-12 lg:py-16">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
         <div
           className="relative mx-auto px-4 sm:px-5 lg:px-6 py-6 sm:py-8 lg:py-10 
@@ -28,7 +28,7 @@ export default function About() {
                       mx-3 sm:mx-4 lg:mx-auto"
         >
           {/* LEFT — Content Card */}
-          <div className="bg-white backdrop-blur-xl rounded-2xl lg:rounded-3xl p-6 sm:p-8 lg:p-10 border border-[#D5D8E0] shadow-xl order-2 lg:order-1">
+          <div className="bg-white backdrop-blur-xl rounded-2xl lg:rounded-3xl p-6 sm:p-8 lg:p-10 border border-[#D5D8E0] shadow-xl order-2 lg:order-1 h-full flex flex-col justify-center">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-5 lg:mb-6 text-[#1A1C23]">
               About Offworld Media
             </h2>
@@ -69,7 +69,7 @@ export default function About() {
           </div>
 
           {/* RIGHT — Image */}
-          <div className="relative h-48 sm:h-64 md:h-72 lg:h-80 xl:h-96 rounded-2xl lg:rounded-3xl overflow-hidden shadow-xl border border-[#D5D8E0] order-1 lg:order-2 mb-4 lg:mb-0">
+          <div className="relative h-64 sm:h-80 md:h-96 lg:h-[500px] xl:h-[600px] rounded-2xl lg:rounded-3xl overflow-hidden shadow-xl border border-[#D5D8E0] order-1 lg:order-2 mb-4 lg:mb-0">
             <img
               src="/Logo.webp"
               alt="Studio team"

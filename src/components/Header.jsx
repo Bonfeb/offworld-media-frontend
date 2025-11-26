@@ -262,75 +262,22 @@ function Header({ activeNav, setActiveNav, onCartClick }) {
               stroke="rgba(0, 184, 200, 0.3)"
               strokeWidth="1.5"
             />
-          </svg>
+          </svg> 
         </div>
 
         {/* Header content */}
         <div className="max-w-7xl mx-auto h-full px-4 lg:px-8 flex justify-between items-center relative z-10">
-          {/* Left: User Avatar with Dropdown Menu */}
-          <div
-            className="flex items-center gap-3 relative"
-            ref={profileMenuRef}
-          >
-            <button
-              onClick={handleProfileClick}
-              className="flex items-center gap-3 group relative"
-            >
-              <div className="relative">
-                {userProfilePic ? (
-                  <img
-                    src={userProfilePic}
-                    alt="User Avatar"
-                    className="w-10 h-10 rounded-lg object-cover border-2 border-blue-500/50 group-hover:border-blue-500 transition-colors"
-                  />
-                ) : (
-                  <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center border-2 border-blue-500/50 group-hover:border-blue-500 transition-colors">
-                    <span className="text-white font-semibold text-sm">
-                      {getUserInitial()}
-                    </span>
-                  </div>
-                )}
-                {isAuthenticated && (
-                  <div className="absolute -bottom-0.5 -right-0.5 bg-green-500 border-2 border-gray-900 rounded-full w-2.5 h-2.5"></div>
-                )}
-              </div>
-              <div className="text-left hidden sm:block">
-                <p className="text-white font-semibold text-xs leading-tight">
-                  {isAuthenticated ? getUserRole() : "Guest"}
-                </p>
-                <p className="text-gray-400 text-[10px] leading-tight">
-                  {isAuthenticated ? getUserName() : "Sign in"}
-                </p>
-              </div>
-            </button>
-
-            {/* Profile Dropdown Menu */}
-            {showProfileMenu && isAuthenticated && (
-              <div className="absolute top-full left-0 mt-2 w-48 bg-gray-800 border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden">
-                {/* Menu Items */}
-                <div className="p-1">
-                  <button
-                    onClick={handleDashboardClick}
-                    className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
-                  >
-                    <LayoutDashboard className="w-4 h-4" />
-                    <span>Dashboard</span>
-                  </button>
-
-                  <button
-                    onClick={handleLogoutClick}
-                    className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    <span>Logout</span>
-                  </button>
-                </div>
-              </div>
-            )}
+          {/* Left: Favicon - Only visible on sm and xs screens */}
+          <div className="flex md:hidden items-center">
+            <img 
+              src="/favicon.ico" 
+              alt="Offworld Media" 
+              className="h-8 w-8"
+            />
           </div>
 
-          {/* Center: Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-4 lg:gap-6">
+          {/* Center: Desktop Navigation - Centered */}
+          <nav className="hidden md:flex items-center justify-center gap-4 lg:gap-6 absolute left-1/2 transform -translate-x-1/2">
             {navItems.map((item) => (
               <button
                 key={item}
@@ -347,24 +294,7 @@ function Header({ activeNav, setActiveNav, onCartClick }) {
           </nav>
 
           {/* Right: Cart + Menu */}
-
           <div className="flex items-center gap-3">
-            {/* Cart Button - Always Visible 
-            <button
-              onClick={handleCartClick}
-              className="bg-blue-600 text-white rounded-full w-10 h-10 flex items-center justify-center hover:bg-blue-700 transition-all duration-200 relative flex-shrink-0"
-              title="Cart"
-              aria-label={`Shopping cart with ${cartItemCount} items`}
-            >
-              <ShoppingCart className="w-5 h-5" />
-              {isAuthenticated && cartItemCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center border-2 border-gray-900">
-                  {cartItemCount > 99 ? "99+" : cartItemCount}
-                </span>
-              )}
-            </button>
-            */}
-
             {/* Hamburger Menu - Only on Mobile */}
             <button
               onClick={() => setIsOpen(true)}
@@ -468,62 +398,6 @@ function Header({ activeNav, setActiveNav, onCartClick }) {
 
           {/* Drawer Content */}
           <div className="flex-1 overflow-y-auto">
-            {/* User Profile Section */}
-            <div className="p-4">
-              <button
-                onClick={() => {
-                  if (isAuthenticated) {
-                    handleDashboardClick();
-                  } else {
-                    setShowSignIn(true);
-                    setIsOpen(false);
-                  }
-                }}
-                className="w-full flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors border border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-              >
-                {userProfilePic ? (
-                  <img
-                    src={userProfilePic}
-                    alt="User Avatar"
-                    className="w-12 h-12 rounded-lg object-cover border-2 border-blue-500/50 flex-shrink-0"
-                  />
-                ) : (
-                  <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center border-2 border-blue-500/50 flex-shrink-0">
-                    <span className="text-white font-semibold text-lg">
-                      {getUserInitial()}
-                    </span>
-                  </div>
-                )}
-                <div className="flex-1 text-left min-w-0">
-                  <p className="text-white font-semibold text-sm truncate">
-                    {isAuthenticated ? getUserName() : "Guest"}
-                  </p>
-                  <p className="text-gray-400 text-xs truncate">
-                    {isAuthenticated ? `${getUserRole()} Dashboard` : "Sign In"}
-                  </p>
-                </div>
-                {isAuthenticated && (
-                  <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></div>
-                )}
-              </button>
-
-              {/* Logout Button in Drawer - Only show when authenticated */}
-              {isAuthenticated && (
-                <button
-                  onClick={() => {
-                    setShowLogoutConfirm(true);
-                    setIsOpen(false);
-                  }}
-                  className="w-full flex items-center gap-3 p-3 mt-2 rounded-lg bg-red-600/20 hover:bg-red-600/30 text-red-400 hover:text-red-300 transition-colors border border-red-500/20 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
-                >
-                  <LogOut className="w-4 h-4 flex-shrink-0" />
-                  <span className="text-sm font-medium">Logout</span>
-                </button>
-              )}
-            </div>
-
-            <Divider sx={{ borderColor: "rgba(255,255,255,0.1)", mx: 2 }} />
-
             {/* Navigation Items */}
             <nav className="p-4 space-y-1">
               {navItems.map((item) => (
@@ -550,26 +424,6 @@ function Header({ activeNav, setActiveNav, onCartClick }) {
             </nav>
 
             <Divider sx={{ borderColor: "rgba(255,255,255,0.1)", mx: 2 }} />
-
-            {/* Cart Button in Drawer 
-            <div className="p-4">
-              <button
-                onClick={() => {
-                  handleCartClick();
-                }}
-                className="w-full flex items-center justify-between px-4 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm transition-colors shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-              >
-                <div className="flex items-center gap-2">
-                  <ShoppingCart className="w-4 h-4" />
-                  <span>View Cart</span>
-                </div>
-                {isAuthenticated && cartItemCount > 0 && (
-                  <span className="bg-orange-500 text-white text-xs font-bold rounded-full px-2.5 py-1 min-w-[28px] text-center">
-                    {cartItemCount > 99 ? "99+" : cartItemCount}
-                  </span>
-                )}
-              </button>
-            </div> */}
           </div>
 
           {/* Drawer Footer */}
@@ -581,36 +435,6 @@ function Header({ activeNav, setActiveNav, onCartClick }) {
         </div>
       </Drawer>
 
-      {/* SignIn Modal */}
-      <SignIn
-        isOpen={showSignIn}
-        onClose={() => setShowSignIn(false)}
-        onOpenSignUp={() => {
-          setShowSignUp(true);
-          setShowSignIn(false);
-        }}
-        onOpenForgotPassword={() => {
-          setShowSignIn(false);
-          setShowForgotPassword(true);
-        }}
-        onSignInSuccess={handleSignInSuccess}
-      />
-      <SignUp
-        isOpen={showSignUp}
-        onClose={() => setShowSignUp(false)}
-        onOpenSignIn={() => {
-          setShowSignUp(false);
-          setShowSignIn(true);
-        }}
-      />
-      <ForgotPassword
-        isOpen={showForgotPassword}
-        onClose={() => setShowForgotPassword(false)}
-        onOpenSignIn={() => {
-          setShowForgotPassword(false);
-          setShowSignIn(true);
-        }}
-      />
     </>
   );
 }
