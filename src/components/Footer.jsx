@@ -6,9 +6,9 @@ import {
   useTheme,
   useMediaQuery,
 } from "@mui/material";
-import { Twitter, Facebook, Instagram, YouTube } from "@mui/icons-material";
+import { Facebook, Instagram, YouTube } from "@mui/icons-material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTiktok } from "@fortawesome/free-brands-svg-icons";
+import { faTiktok, faXTwitter } from "@fortawesome/free-brands-svg-icons";
 
 const Footer = () => {
   const theme = useTheme();
@@ -25,8 +25,8 @@ const Footer = () => {
     {
       name: "Twitter",
       url: twitter,
-      icon: Twitter,
-      component: "mui",
+      icon: faXTwitter,
+      component: "fontawesome",
     },
     {
       name: "Facebook",
@@ -171,7 +171,7 @@ const Footer = () => {
                     display: { xs: "none", sm: "block" },
                   }}
                 >
-                  Follow & Contact us:
+                  
                 </Typography>
                 <Typography
                   variant="body2"
@@ -182,7 +182,7 @@ const Footer = () => {
                     display: { xs: "block", sm: "none" },
                   }}
                 >
-                  Follow & Contact us:
+                  
                 </Typography>
                 {socialLinks.map((social, index) => (
                   <IconButton

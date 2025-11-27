@@ -11,6 +11,8 @@ import {
   CreditCard,
   Phone,
   AlertTriangle,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { Snackbar, Alert, AlertTitle } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -31,6 +33,7 @@ export default function Services({ setActiveNav }) {
   const [alertSeverity, setAlertSeverity] = useState("success");
   const [alertTitle, setAlertTitle] = useState("");
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [expandedDescriptions, setExpandedDescriptions] = useState({});
 
   const { userId, isAuthenticated } = useContext(AuthContext);
 
@@ -161,6 +164,25 @@ export default function Services({ setActiveNav }) {
         "error"
       );
     }
+  };
+
+  // Toggle description expansion
+  const toggleDescription = (serviceId) => {
+    setExpandedDescriptions(prev => ({
+      ...prev,
+      [serviceId]: !prev[serviceId]
+    }));
+  };
+
+  // Check if description is long enough to need truncation
+  const isLongDescription = (description) => {
+    return description && description.length > 150;
+  };
+
+  // Get truncated description
+  const getTruncatedDescription = (description) => {
+    if (!description) return "";
+    return description.length > 150 ? description.substring(0, 150) + "..." : description;
   };
 
   if (loading) {
@@ -301,6 +323,11 @@ export default function Services({ setActiveNav }) {
                   const isInCart =
                     isAuthenticated &&
                     CartConstants.isServiceInCart(userId, service.id);
+                  const isExpanded = expandedDescriptions[service.id];
+                  const shouldTruncate = isLongDescription(service.description);
+                  const displayDescription = isExpanded 
+                    ? service.description 
+                    : (shouldTruncate ? getTruncatedDescription(service.description) : service.description);
 
                   return (
                     <div
@@ -359,9 +386,33 @@ export default function Services({ setActiveNav }) {
                           {service.title || service.get_category_display}
                         </h3>
 
-                        <p className="text-sm sm:text-base text-[#D5D8E0] leading-relaxed sm:leading-relaxed group-hover:text-white/90 transition-colors duration-300 flex-1 mb-4 line-clamp-3">
-                          {service.description}
-                        </p>
+                        <div className="flex-1 mb-4">
+                          <p className="text-sm sm:text-base text-[#D5D8E0] leading-relaxed sm:leading-relaxed group-hover:text-white/90 transition-colors duration-300">
+                            {displayDescription}
+                          </p>
+                          
+                          {/* Read More/Less Button */}
+                          {shouldTruncate && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleDescription(service.id);
+                              }}
+                              className="mt-2 flex items-center gap-1 text-[#52c297] hover:text-[#00B8C8] text-sm font-medium transition-colors duration-200 group/readmore"
+                            >
+                              <span>
+                                {isExpanded ? "Read Less" : "Read More"}
+                              </span>
+                              {isExpanded ? (
+                                <ChevronUp size={16} className="group-hover/readmore:translate-y-[-1px] transition-transform" />
+                              ) : (
+                                <ChevronDown size={16} className="group-hover/readmore:translate-y-[1px] transition-transform" />
+                              )}
+                            </button>
+                          )}
+                        </div>
+
+                        
                       </div>
                     </div>
                   );

@@ -171,7 +171,6 @@ export default function HeroSection({ setActiveNav }) {
   useEffect(() => {
     const fetchChannelVideos = async () => {
       if (!YOUTUBE_API_KEY || !YOUTUBE_CHANNEL_ID) {
-        console.warn("YouTube API key or Channel ID not configured");
         return;
       }
 

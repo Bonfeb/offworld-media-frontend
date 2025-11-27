@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Loader2, X, Mail } from "lucide-react";
 import API from "../../api";
 
-const ForgotPassword = ({ isOpen, onClose, onOpenSignIn }) => {
+const ForgotPassword = ({ isOpen, onClose, onSwitchToSignIn }) => {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -48,8 +48,8 @@ const ForgotPassword = ({ isOpen, onClose, onOpenSignIn }) => {
 
   const handleSignInClick = () => {
     onClose();
-    if (onOpenSignIn) {
-      onOpenSignIn();
+    if (onSwitchToSignIn) {
+      onSwitchToSignIn();
     }
   };
 

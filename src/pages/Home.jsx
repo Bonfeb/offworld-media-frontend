@@ -54,7 +54,7 @@ function Home({ onOpenContact }) {
         <section id="Services">
           <Services />
         </section>
-        <section id="About">
+        <section id="About Us">
           <About />
         </section>
         <section id="Team">

@@ -227,7 +227,7 @@ function App() {
         />
         
         <ForgotPassword 
-          open={isForgotPasswordOpen} 
+          isOpen={isForgotPasswordOpen} 
           onClose={handleCloseForgotPassword}
           onSwitchToSignIn={handleSwitchToSignIn}
         />

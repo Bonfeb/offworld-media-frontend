@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Loader2, Eye, EyeOff, Upload, X } from "lucide-react";
+import SignIn from "./SignIn";
 
 export default function SignUp({ isOpen, onClose, onOpenSignIn }) {
   const [formData, setFormData] = useState({
@@ -17,8 +18,19 @@ export default function SignUp({ isOpen, onClose, onOpenSignIn }) {
     useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [showSignIn, setShowSignIn] = useState(false);
 
-  if (!isOpen) return null;
+  if (!isOpen && !showSignIn) return null;
+
+const handleCloseAll = () =>{
+  onClose();
+  setShowSignIn(false);
+};
+
+const handleOpenSignIn = () =>{
+  onClose();
+  setShowSignIn(true)
+};
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -124,9 +136,11 @@ export default function SignUp({ isOpen, onClose, onOpenSignIn }) {
             <h2 className="text-2xl sm:text-3xl font-bold mb-2 bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">
               Create Account
             </h2>
-            <p className="text-white/70 text-sm mb-2 sm:mb-3">Join Offworld Media today</p>
+            <p className="text-white/70 text-sm mb-2 sm:mb-3">
+              Join Offworld Media today
+            </p>
             <button
-              onClick={onOpenSignIn}
+              onClick={handleOpenSignIn}
               className="text-[#5A6DFF] hover:text-[#00B8C8] text-xs sm:text-sm font-medium transition-colors duration-200"
             >
               Already have an account? Sign in here
@@ -487,6 +501,13 @@ export default function SignUp({ isOpen, onClose, onOpenSignIn }) {
           </div>
         </div>
       </div>
+
+      <SignIn
+        isOpen={showSignIn}
+        onClose={handleCloseAll}
+        onSignInSuccess={() => {}}
+        onOpenForgotPassword={() => {}}
+      />
     </div>
   );
 }

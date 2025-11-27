@@ -10,8 +10,12 @@ import {
   Scissors,
   Camera,
   Video,
+  Facebook as FacebookIcon,
+  Instagram as InstagramIcon,
 } from "lucide-react";
-import { Facebook, Twitter, Instagram, Language } from "@mui/icons-material";
+import { Facebook, Instagram } from "@mui/icons-material";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faTiktok, faXTwitter } from "@fortawesome/free-brands-svg-icons";
 import API from "../api";
 
 export default function Team() {
@@ -302,22 +306,34 @@ const TeamMemberCard = ({
     {
       key: "facebook",
       icon: Facebook,
+      component: "mui",
       link: member.facebook_link,
       color:
         "text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white",
       title: "Facebook",
     },
     {
+      key: "tiktok",
+      icon: faTiktok,
+      component: "fontawesome",
+      link: member.tiktok_link,
+      color:
+        "text-gray-500 hover:text-pink-600 dark:text-gray-400 dark:hover:text-white",
+      title: "TikTok",
+    },
+    {
       key: "twitter",
-      icon: Twitter,
+      icon: faXTwitter,
+      component: "fontawesome",
       link: member.twitter_link,
       color:
         "text-gray-500 hover:text-sky-500 dark:text-gray-400 dark:hover:text-white",
-      title: "Twitter",
+      title: "X",
     },
     {
       key: "instagram",
       icon: Instagram,
+      component: "mui",
       link: member.instagram_link,
       color:
         "text-gray-500 hover:text-pink-600 dark:text-gray-400 dark:hover:text-white",
@@ -336,8 +352,23 @@ const TeamMemberCard = ({
     const urlPattern = /^https?:\/\/[^\s/$.?#].[^\s]*$/i;
     return urlPattern.test(cleanUrl);
   };
+
   const getUserInitial = () => {
     return member.name ? member.name.charAt(0).toUpperCase() : "T";
+  };
+
+  // Render social icon based on component type
+  const renderSocialIcon = (social) => {
+    const hasLink = Boolean(social.link && isValidUrl(social.link));
+
+    if (social.component === "fontawesome") {
+      return <FontAwesomeIcon icon={social.icon} className="w-5 h-5" />;
+    } else if (social.component === "mui") {
+      const IconComponent = social.icon;
+      return <IconComponent className="w-5 h-5" />;
+    }
+
+    return null;
   };
 
   return (
@@ -387,8 +418,7 @@ const TeamMemberCard = ({
         {/* Social Links */}
         <ul className="flex space-x-3">
           {socialIcons.map((social) => {
-            const IconComponent = social.icon;
-            const hasLink = Boolean(social.link);
+            const hasLink = Boolean(social.link && isValidUrl(social.link));
 
             return (
               <li key={social.key}>
@@ -404,7 +434,7 @@ const TeamMemberCard = ({
                   }
                   disabled={!hasLink}
                 >
-                  <IconComponent className="w-5 h-5" />
+                  {renderSocialIcon(social)}
                 </button>
               </li>
             );

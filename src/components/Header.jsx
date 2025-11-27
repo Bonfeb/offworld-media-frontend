@@ -40,7 +40,7 @@ function Header({ activeNav, setActiveNav, onCartClick }) {
     login,
   } = useContext(AuthContext);
 
-  const navItems = ["Home", "Services", "About", "Team", "Contact"];
+  const navItems = ["Home", "Services", "About Us", "Team", "Contact"];
 
   // Debug AuthContext changes
   useEffect(() => {

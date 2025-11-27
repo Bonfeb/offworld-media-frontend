@@ -8,8 +8,9 @@ const SignIn = ({
   isOpen,
   onClose,
   onSignInSuccess,
-  onOpenSignUp,
-  onOpenForgotPassword,
+  onSwitchToSignIn,
+  onSwitchToSignUp,
+  onSwitchToForgotPassword,
 }) => {
   const [formData, setFormData] = useState({
     username: "",
@@ -18,8 +19,25 @@ const SignIn = ({
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [showSignUp, setShowSignUp] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   if (!isOpen) return null;
+
+  const handleCloseAll = () => {
+    onClose();
+    setShowSignUp(false);
+  };
+
+  const handleOpenSignUp = () => {
+    onClose();
+    setShowSignUp(true);
+  };
+
+  const handleOpenForgotPassword = () => {
+    onClose();
+    setShowForgotPassword(true);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -133,14 +151,18 @@ const SignIn = ({
 
   const handleSignUpClick = () => {
     onClose();
-    if (onOpenSignUp) {
-      onOpenSignUp();
+    if (onSwitchToSignUp) {
+      onSwitchToSignUp();
+    } else {
+      handleOpenSignUp();
     }
   };
 
   const handleForgotPasswordClick = () => {
-    if (onOpenForgotPassword) {
-      onOpenForgotPassword();
+    if (onSwitchToForgotPassword) {
+      onSwitchToForgotPassword();
+    } else {
+      handleOpenForgotPassword();
     }
   };
 
@@ -359,6 +381,25 @@ const SignIn = ({
           </div>
         </div>
       </div>
+
+      <SignUp
+        isOpen={showSignUp}
+        onClose={handleCloseAll}
+        onSwitchToSignUp={() => {
+          setShowSignUp(false);
+        }}
+      />
+
+      <ForgotPassword
+        isOpen={showForgotPassword}
+        onClose={handleCloseAll}
+        onOpenSignIn={() => {
+          setShowForgotPassword(false);
+          if (onSwitchToSignIn) {
+            onSwitchToSignIn();
+          }
+        }}
+      />
     </div>
   );
 };

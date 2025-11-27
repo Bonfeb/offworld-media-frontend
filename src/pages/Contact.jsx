@@ -12,7 +12,7 @@ export default function Contact({ onOpenContact, setActiveNav }) {
     {
       icon: Phone,
       label: "Phone/WhatsApp",
-      value: "+254-716-132-272",
+      value: "+254 716 132 272",
       link: "tel:+254716132272",
     },
     {
@@ -43,7 +43,7 @@ export default function Contact({ onOpenContact, setActiveNav }) {
             <div className="mb-8 sm:mb-10 lg:mb-12">
               {/* Title - Responsive */}
               <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 sm:mb-8 text-center lg:text-left">
-                Get In Touch With Us
+                Contact Us
               </h2>
 
               {/* Contact Info Cards - Responsive Spacing */}

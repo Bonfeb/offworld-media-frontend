@@ -30,7 +30,7 @@ export default function About() {
           {/* LEFT — Content Card */}
           <div className="bg-white backdrop-blur-xl rounded-2xl lg:rounded-3xl p-6 sm:p-8 lg:p-10 border border-[#D5D8E0] shadow-xl order-2 lg:order-1 h-full flex flex-col justify-center">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-5 lg:mb-6 text-[#1A1C23]">
-              About Offworld Media
+              About Us
             </h2>
             <p className="text-[#2F364D] leading-relaxed text-sm sm:text-base lg:text-lg mb-4 sm:mb-5 lg:mb-6">
               Offworld Media is a business company specializing in photography,
