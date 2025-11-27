@@ -9,6 +9,9 @@ import {
   ChevronRight,
   Play,
   Pause,
+  Volume2,
+  VolumeX,
+  Maximize2,
 } from "lucide-react";
 import { useScrollVisibility } from "../hooks/useScrollVisibility";
 import { CounterCard } from "../components/CounterCard";
@@ -75,28 +78,92 @@ export default function HeroSection({ setActiveNav }) {
   const [announcementsLoading, setAnnouncementsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [channelVideos, setChannelVideos] = useState([]);
-  const [apiConfigStatus, setApiConfigStatus] = useState('checking');
+  const [apiConfigStatus, setApiConfigStatus] = useState("checking");
 
   // New state for full screen image viewer
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [fullScreenIndex, setFullScreenIndex] = useState(0);
 
-  // Video control state
-  const [videoPlaying, setVideoPlaying] = useState(false);
+  // Video control state - now stored per video
+  const [videoStates, setVideoStates] = useState({});
 
   const { ref, isVisible } = useScrollVisibility({ threshold: 0.3 });
+
+  // Initialize video state for a slide
+  const initializeVideoState = (slideId) => {
+    if (!videoStates[slideId]) {
+      setVideoStates((prev) => ({
+        ...prev,
+        [slideId]: {
+          playing: false,
+          muted: true,
+          progress: 0,
+        },
+      }));
+    }
+  };
+
+  // Get video state for a specific slide
+  const getVideoState = (slideId) => {
+    return (
+      videoStates[slideId] || {
+        playing: false,
+        muted: true,
+        progress: 0,
+      }
+    );
+  };
+
+  // Get current video state
+  const getCurrentVideoState = () => {
+    const currentSlideId = slides[currentSlide]?.id;
+    return getVideoState(currentSlideId);
+  };
+
+  // Get full screen video state
+  const getFullScreenVideoState = () => {
+    const fullScreenSlideId = slides[fullScreenIndex]?.id;
+    return getVideoState(fullScreenSlideId);
+  };
+
+  // Update video state
+  const updateVideoState = (slideId, updates) => {
+    setVideoStates((prev) => ({
+      ...prev,
+      [slideId]: {
+        ...getVideoState(slideId),
+        ...updates,
+      },
+    }));
+  };
+
+  // Handle video play/pause for specific slide
+  const toggleVideoPlay = (slideId) => {
+    if (slideId) {
+      const currentState = getVideoState(slideId);
+      updateVideoState(slideId, { playing: !currentState.playing });
+    }
+  };
+
+  // Handle video mute/unmute for specific slide
+  const toggleVideoMute = (slideId) => {
+    if (slideId) {
+      const currentState = getVideoState(slideId);
+      updateVideoState(slideId, { muted: !currentState.muted });
+    }
+  };
 
   // Check API configuration on component mount
   useEffect(() => {
     if (!YOUTUBE_API_KEY || !YOUTUBE_CHANNEL_ID) {
-      setApiConfigStatus('missing');
-      console.warn('YouTube API configuration missing:', {
+      setApiConfigStatus("missing");
+      console.warn("YouTube API configuration missing:", {
         hasApiKey: !!YOUTUBE_API_KEY,
-        hasChannelId: !!YOUTUBE_CHANNEL_ID
+        hasChannelId: !!YOUTUBE_CHANNEL_ID,
       });
     } else {
-      setApiConfigStatus('configured');
-      console.log('YouTube API configured successfully');
+      setApiConfigStatus("configured");
+      console.log("YouTube API configured successfully");
     }
   }, []);
 
@@ -104,61 +171,66 @@ export default function HeroSection({ setActiveNav }) {
   useEffect(() => {
     const fetchChannelVideos = async () => {
       if (!YOUTUBE_API_KEY || !YOUTUBE_CHANNEL_ID) {
-        console.warn('YouTube API key or Channel ID not configured');
+        console.warn("YouTube API key or Channel ID not configured");
         return;
       }
 
       try {
-        setApiConfigStatus('fetching');
-        
+        setApiConfigStatus("fetching");
+
         // First, get the uploads playlist ID from the channel
         const channelResponse = await fetch(
           `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${YOUTUBE_CHANNEL_ID}&key=${YOUTUBE_API_KEY}`
         );
-        
+
         if (!channelResponse.ok) {
           throw new Error(`YouTube API error: ${channelResponse.status}`);
         }
-        
+
         const channelData = await channelResponse.json();
-        
+
         if (channelData.items && channelData.items.length > 0) {
-          const uploadsPlaylistId = channelData.items[0].contentDetails.relatedPlaylists.uploads;
-          
+          const uploadsPlaylistId =
+            channelData.items[0].contentDetails.relatedPlaylists.uploads;
+
           // Then, get videos from the uploads playlist
           const videosResponse = await fetch(
             `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=10&playlistId=${uploadsPlaylistId}&key=${YOUTUBE_API_KEY}`
           );
-          
+
           if (!videosResponse.ok) {
             throw new Error(`YouTube API error: ${videosResponse.status}`);
           }
-          
+
           const videosData = await videosResponse.json();
-          
+
           const videos = videosData.items.map((item, index) => ({
             src: `https://www.youtube.com/watch?v=${item.snippet.resourceId.videoId}`,
             alt: item.snippet.title,
             id: `youtube-${item.snippet.resourceId.videoId}`,
-            type: 'video',
+            type: "video",
             videoId: item.snippet.resourceId.videoId,
-            thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.default.url,
+            thumbnail:
+              item.snippet.thumbnails.high?.url ||
+              item.snippet.thumbnails.default.url,
             title: item.snippet.title,
             description: item.snippet.description,
             publishedAt: item.snippet.publishedAt,
-            fromChannel: true
+            fromChannel: true,
           }));
-          
+
           setChannelVideos(videos);
-          setApiConfigStatus('success');
-          console.log(`Successfully loaded ${videos.length} videos from YouTube channel`);
+          setApiConfigStatus("success");
+          console.log(
+            `Successfully loaded ${videos.length} videos from YouTube channel`
+          );
         } else {
-          setApiConfigStatus('no-channel');
-          console.warn('No YouTube channel found with the provided ID');
+          setApiConfigStatus("no-channel");
+          console.warn("No YouTube channel found with the provided ID");
         }
       } catch (err) {
-        console.error('Error fetching YouTube videos:', err);
-        setApiConfigStatus('error');
+        console.error("Error fetching YouTube videos:", err);
+        setApiConfigStatus("error");
       }
     };
 
@@ -177,18 +249,20 @@ export default function HeroSection({ setActiveNav }) {
         // Transform API data to slides format with type detection
         const formattedImages = response.data.map((item, index) => {
           // Check if it's a YouTube video
-          const isYouTube = item.image?.includes('youtube.com') || item.image?.includes('youtu.be');
-          
+          const isYouTube =
+            item.image?.includes("youtube.com") ||
+            item.image?.includes("youtu.be");
+
           if (isYouTube) {
             const videoId = extractYouTubeId(item.image);
             return {
               src: item.image,
               alt: `Video ${index + 1}`,
               id: item.id || index,
-              type: 'video',
+              type: "video",
               videoId: videoId,
               thumbnail: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
-              fromAPI: true
+              fromAPI: true,
             };
           } else {
             // Regular image
@@ -196,19 +270,21 @@ export default function HeroSection({ setActiveNav }) {
               src: item.image,
               alt: `Studio image ${index + 1}`,
               id: item.id || index,
-              type: 'image',
-              fromAPI: true
+              type: "image",
+              fromAPI: true,
             };
           }
         });
 
         // Combine API images with channel videos (remove duplicates)
         const allSlides = [...formattedImages];
-        
+
         // Only add channel videos if they're not already in the API images
-        channelVideos.forEach(channelVideo => {
-          const exists = formattedImages.some(apiItem => 
-            apiItem.type === 'video' && apiItem.videoId === channelVideo.videoId
+        channelVideos.forEach((channelVideo) => {
+          const exists = formattedImages.some(
+            (apiItem) =>
+              apiItem.type === "video" &&
+              apiItem.videoId === channelVideo.videoId
           );
           if (!exists) {
             allSlides.push(channelVideo);
@@ -228,11 +304,21 @@ export default function HeroSection({ setActiveNav }) {
     fetchMedia();
   }, [channelVideos]);
 
+  // Initialize video states when slides change
+  useEffect(() => {
+    slides.forEach((slide) => {
+      if (slide.type === "video") {
+        initializeVideoState(slide.id);
+      }
+    });
+  }, [slides]);
+
   // Extract YouTube video ID from URL
   const extractYouTubeId = (url) => {
-    const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+    const regExp =
+      /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
     const match = url.match(regExp);
-    return (match && match[7].length === 11) ? match[7] : null;
+    return match && match[7].length === 11 ? match[7] : null;
   };
 
   // Fetch announcements from backend API
@@ -256,7 +342,10 @@ export default function HeroSection({ setActiveNav }) {
               title: announcement.title,
               type: announcement.type,
               description: announcement.description,
-              date: announcement.type === "promotion" ? announcement.startDate : announcement.date,
+              date:
+                announcement.type === "promotion"
+                  ? announcement.startDate
+                  : announcement.date,
               startDate: announcement.startDate,
               endDate: announcement.endDate,
               ctaText: getDefaultCtaText(announcement.type),
@@ -302,14 +391,22 @@ export default function HeroSection({ setActiveNav }) {
   // Image carousel functions
   const nextSlide = () => {
     if (slides.length > 0) {
-      setVideoPlaying(false);
+      // Stop current video
+      const currentSlideId = slides[currentSlide]?.id;
+      if (currentSlideId && slides[currentSlide]?.type === "video") {
+        updateVideoState(currentSlideId, { playing: false, progress: 0 });
+      }
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }
   };
 
   const prevSlide = () => {
     if (slides.length > 0) {
-      setVideoPlaying(false);
+      // Stop current video
+      const currentSlideId = slides[currentSlide]?.id;
+      if (currentSlideId && slides[currentSlide]?.type === "video") {
+        updateVideoState(currentSlideId, { playing: false, progress: 0 });
+      }
       setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
     }
   };
@@ -324,22 +421,29 @@ export default function HeroSection({ setActiveNav }) {
   const closeFullScreen = () => {
     setIsFullScreen(false);
     document.body.style.overflow = "unset";
-    setVideoPlaying(false);
+    // Stop video when closing full screen
+    const fullScreenSlideId = slides[fullScreenIndex]?.id;
+    if (fullScreenSlideId && slides[fullScreenIndex]?.type === "video") {
+      updateVideoState(fullScreenSlideId, { playing: false });
+    }
   };
 
   const nextFullScreenSlide = () => {
+    // Stop current video
+    const currentSlideId = slides[fullScreenIndex]?.id;
+    if (currentSlideId && slides[fullScreenIndex]?.type === "video") {
+      updateVideoState(currentSlideId, { playing: false, progress: 0 });
+    }
     setFullScreenIndex((prev) => (prev + 1) % slides.length);
-    setVideoPlaying(false);
   };
 
   const prevFullScreenSlide = () => {
+    // Stop current video
+    const currentSlideId = slides[fullScreenIndex]?.id;
+    if (currentSlideId && slides[fullScreenIndex]?.type === "video") {
+      updateVideoState(currentSlideId, { playing: false, progress: 0 });
+    }
     setFullScreenIndex((prev) => (prev - 1 + slides.length) % slides.length);
-    setVideoPlaying(false);
-  };
-
-  // Handle video play/pause
-  const toggleVideoPlay = () => {
-    setVideoPlaying(!videoPlaying);
   };
 
   // Handle keyboard navigation in full screen mode
@@ -358,8 +462,17 @@ export default function HeroSection({ setActiveNav }) {
           nextFullScreenSlide();
           break;
         case " ":
-          if (slides[fullScreenIndex]?.type === 'video') {
-            toggleVideoPlay();
+          if (slides[fullScreenIndex]?.type === "video") {
+            const slideId = slides[fullScreenIndex]?.id;
+            toggleVideoPlay(slideId);
+            e.preventDefault();
+          }
+          break;
+        case "m":
+        case "M":
+          if (slides[fullScreenIndex]?.type === "video") {
+            const slideId = slides[fullScreenIndex]?.id;
+            toggleVideoMute(slideId);
             e.preventDefault();
           }
           break;
@@ -370,21 +483,26 @@ export default function HeroSection({ setActiveNav }) {
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isFullScreen, slides.length, fullScreenIndex, videoPlaying]);
+  }, [isFullScreen, slides.length, fullScreenIndex, videoStates]);
 
   // Auto-slide for images and videos
   useEffect(() => {
     if (slides.length === 0 || isFullScreen) return;
 
     const interval = setInterval(() => {
-      if (slides[currentSlide]?.type === 'video' && videoPlaying) {
+      const currentSlideData = slides[currentSlide];
+      if (currentSlideData?.type === "video") {
+        const currentState = getCurrentVideoState();
+        if (currentState.playing && currentState.progress >= 30) {
+          nextSlide();
+        }
         return;
       }
       nextSlide();
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [slides.length, isFullScreen, currentSlide, videoPlaying]);
+  }, [slides.length, isFullScreen, currentSlide, videoStates]);
 
   // Auto-rotate announcements
   useEffect(() => {
@@ -395,23 +513,56 @@ export default function HeroSection({ setActiveNav }) {
     return () => clearInterval(interval);
   }, [announcements.length]);
 
-  // Auto-play video when it becomes active
+  // Auto-play video when it becomes active and track progress
   useEffect(() => {
-    if (slides[currentSlide]?.type === 'video' && !isFullScreen) {
-      const timer = setTimeout(() => {
-        setVideoPlaying(true);
-      }, 500);
+    if (slides[currentSlide]?.type === "video" && !isFullScreen) {
+      const currentSlideId = slides[currentSlide]?.id;
+      if (currentSlideId) {
+        // Auto-play after delay
+        const timer = setTimeout(() => {
+          updateVideoState(currentSlideId, { playing: true });
+        }, 500);
 
-      const stopTimer = setTimeout(() => {
-        setVideoPlaying(false);
-      }, 4000);
+        // Track video progress
+        const progressInterval = setInterval(() => {
+          const currentState = getCurrentVideoState();
+          if (currentState.playing) {
+            const newProgress = currentState.progress + 1;
+            updateVideoState(currentSlideId, { progress: newProgress });
 
-      return () => {
-        clearTimeout(timer);
-        clearTimeout(stopTimer);
-      };
+            // Auto-stop after 30 seconds and move to next slide
+            if (newProgress >= 30) {
+              updateVideoState(currentSlideId, { playing: false, progress: 0 });
+              setTimeout(() => nextSlide(), 1000);
+            }
+          }
+        }, 1000);
+
+        return () => {
+          clearTimeout(timer);
+          clearInterval(progressInterval);
+        };
+      }
     }
-  }, [currentSlide, slides, isFullScreen]);
+  }, [currentSlide, slides, isFullScreen, videoStates]);
+
+  // Track video progress in full screen mode
+  useEffect(() => {
+    if (isFullScreen && slides[fullScreenIndex]?.type === "video") {
+      const fullScreenSlideId = slides[fullScreenIndex]?.id;
+      if (fullScreenSlideId) {
+        const currentState = getFullScreenVideoState();
+        if (currentState.playing) {
+          const progressInterval = setInterval(() => {
+            const newProgress = currentState.progress + 1;
+            updateVideoState(fullScreenSlideId, { progress: newProgress });
+          }, 1000);
+
+          return () => clearInterval(progressInterval);
+        }
+      }
+    }
+  }, [isFullScreen, fullScreenIndex, slides, videoStates]);
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -422,7 +573,9 @@ export default function HeroSection({ setActiveNav }) {
 
   const getDateDisplay = (announcement) => {
     if (announcement.type === "promotion") {
-      return `${formatDate(announcement.startDate)} - ${formatDate(announcement.endDate)}`;
+      return `${formatDate(announcement.startDate)} - ${formatDate(
+        announcement.endDate
+      )}`;
     } else {
       return formatDate(announcement.date);
     }
@@ -430,7 +583,14 @@ export default function HeroSection({ setActiveNav }) {
 
   // Render YouTube video player
   const renderYouTubePlayer = (slide, isFullScreenMode = false) => {
-    const videoUrl = `https://www.youtube.com/embed/${slide.videoId}?autoplay=${videoPlaying ? 1 : 0}&mute=1&controls=0&modestbranding=1&rel=0&playsinline=1${isFullScreenMode ? '&enablejsapi=1' : ''}`;
+    const videoState = getVideoState(slide.id);
+    const videoUrl = `https://www.youtube.com/embed/${slide.videoId}?autoplay=${
+      videoState.playing ? 1 : 0
+    }&mute=${
+      videoState.muted ? 1 : 0
+    }&controls=0&modestbranding=1&rel=0&playsinline=1${
+      isFullScreenMode ? "&enablejsapi=1" : ""
+    }`;
 
     return (
       <div className="relative w-full h-full">
@@ -442,47 +602,99 @@ export default function HeroSection({ setActiveNav }) {
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
         />
-        
-        {isFullScreenMode && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <button
-              onClick={toggleVideoPlay}
-              className="bg-black/50 hover:bg-black/70 text-white rounded-full p-4 backdrop-blur-md border border-white/20 transition-all hover:scale-110"
-              aria-label={videoPlaying ? "Pause video" : "Play video"}
-            >
-              {videoPlaying ? <Pause size={32} /> : <Play size={32} />}
-            </button>
-          </div>
-        )}
 
-        <div className="absolute top-3 left-3 bg-red-600 text-white px-2 py-1 rounded text-xs font-medium backdrop-blur-sm">
-          VIDEO
+        {/* Video Controls Overlay */}
+        <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between z-10">
+          {/* Progress Bar */}
+          <div className="flex-1 bg-black/50 backdrop-blur-md rounded-full h-2 mr-4 overflow-hidden">
+            <div
+              className="bg-red-600 h-full transition-all duration-300"
+              style={{ width: `${(videoState.progress / 30) * 100}%` }}
+            />
+          </div>
+
+          {/* Control Buttons */}
+          <div className="flex items-center space-x-2">
+            {/* Mute/Unmute Button */}
+            <button
+              onClick={() => toggleVideoMute(slide.id)}
+              className="bg-black/50 hover:bg-black/70 text-white rounded-full p-2 backdrop-blur-md border border-white/20 transition-all hover:scale-110"
+              aria-label={videoState.muted ? "Unmute video" : "Mute video"}
+            >
+              {videoState.muted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+            </button>
+
+            {/* Fullscreen Button */}
+            <button
+              onClick={() =>
+                openFullScreen(slides.findIndex((s) => s.id === slide.id))
+              }
+              className="bg-black/50 hover:bg-black/70 text-white rounded-full p-2 backdrop-blur-md border border-white/20 transition-all hover:scale-110"
+              aria-label="Open full screen"
+            >
+              <Maximize2 size={20} />
+            </button>
+
+            {/* Play/Pause Button - Only show in full screen */}
+            {isFullScreenMode && (
+              <button
+                onClick={() => toggleVideoPlay(slide.id)}
+                className="bg-black/50 hover:bg-black/70 text-white rounded-full p-2 backdrop-blur-md border border-white/20 transition-all hover:scale-110"
+                aria-label={videoState.playing ? "Pause video" : "Play video"}
+              >
+                {videoState.playing ? <Pause size={20} /> : <Play size={20} />}
+              </button>
+            )}
+          </div>
         </div>
-        
-        {/* Channel badge for videos from your channel */}
-        {slide.fromChannel && (
-          <div className="absolute top-3 right-3 bg-blue-600 text-white px-2 py-1 rounded text-xs font-medium backdrop-blur-sm">
-            OUR CHANNEL
+
+        {/* Progress Text */}
+        {!isFullScreenMode && (
+          <div className="absolute top-3 right-3 bg-black/50 text-white px-2 py-1 rounded text-xs font-medium backdrop-blur-sm">
+            {videoState.progress}s / 30s
           </div>
         )}
       </div>
     );
   };
 
-  // Debug info component
-  const DebugInfo = () => (
-    <div className="fixed bottom-4 left-4 bg-black/80 text-white p-2 rounded text-xs z-40 backdrop-blur-sm">
-      <div>API Status: {apiConfigStatus}</div>
-      <div>Videos: {channelVideos.length}</div>
-      <div>Slides: {slides.length}</div>
+  // Render image with click to open functionality and fullscreen button
+  const renderImage = (slide, index) => (
+    <div className="relative w-full h-full">
+      <img
+        src={slide.src}
+        alt={slide.alt}
+        className="w-full h-full object-cover rounded-2xl lg:rounded-3xl cursor-pointer"
+        onClick={() => openFullScreen(index)}
+        onError={(e) => {
+          e.target.style.display = "none";
+        }}
+      />
+
+      {/* Fullscreen Button Overlay */}
+      <button
+        onClick={() => openFullScreen(index)}
+        className="absolute top-3 right-3 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 backdrop-blur-md border border-white/20 transition-all hover:scale-110 z-10"
+        aria-label="Open full screen"
+      >
+        <Maximize2 size={20} />
+      </button>
+
+      {/* Click to open overlay - shows on hover */}
+      <div
+        className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity bg-black/20 cursor-pointer"
+        onClick={() => openFullScreen(index)}
+      >
+        <div className="bg-black/50 text-white rounded-full p-3 backdrop-blur-sm flex items-center space-x-2">
+          <Maximize2 size={20} />
+          <span className="text-sm font-medium">Click to view full screen</span>
+        </div>
+      </div>
     </div>
   );
 
   return (
     <div className="relative pb-1 bg-[#2F364D] overflow-hidden">
-      {/* Debug info - remove in production */}
-      {process.env.NODE_ENV === 'development' && <DebugInfo />}
-
       {/* Background Blobs */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-10 right-1/4 w-48 h-48 md:w-64 md:h-64 lg:w-96 lg:h-96 bg-[#5A6DFF]/20 rounded-full mix-blend-multiply filter blur-xl md:blur-2xl lg:blur-3xl opacity-20 animate-blob"></div>
@@ -521,14 +733,14 @@ export default function HeroSection({ setActiveNav }) {
             </>
           )}
 
-          <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 bg-black/50 backdrop-blur-md text-white px-4 py-2 rounded-full border border-white/20 text-sm sm:text-base">
+          <div className="absolute bottom-20 sm:bottom-24 left-1/2 -translate-x-1/2 z-50 bg-black/50 backdrop-blur-md text-white px-4 py-2 rounded-full border border-white/20 text-sm sm:text-base">
             {fullScreenIndex + 1} / {slides.length}
-            {slides[fullScreenIndex]?.type === 'video' && ' • Video'}
-            {slides[fullScreenIndex]?.fromChannel && ' • Our Channel'}
+            {slides[fullScreenIndex]?.type === "video" &&
+              ` • ${getFullScreenVideoState().progress}s`}
           </div>
 
           <div className="relative w-full h-full max-w-7xl max-h-[90vh] mx-4 sm:mx-8 flex items-center justify-center">
-            {slides[fullScreenIndex]?.type === 'video' ? (
+            {slides[fullScreenIndex]?.type === "video" ? (
               renderYouTubePlayer(slides[fullScreenIndex], true)
             ) : (
               <img
@@ -540,13 +752,19 @@ export default function HeroSection({ setActiveNav }) {
           </div>
 
           {slides.length > 1 && (
-            <div className="absolute bottom-20 sm:bottom-24 left-1/2 -translate-x-1/2 flex space-x-2 sm:space-x-3 max-w-full overflow-x-auto px-4 py-2 bg-black/30 backdrop-blur-md rounded-2xl border border-white/20">
+            <div className="absolute bottom-32 sm:bottom-36 left-1/2 -translate-x-1/2 flex space-x-2 sm:space-x-3 max-w-full overflow-x-auto px-4 py-2 bg-black/30 backdrop-blur-md rounded-2xl border border-white/20">
               {slides.map((slide, index) => (
                 <button
                   key={slide.id}
                   onClick={() => {
                     setFullScreenIndex(index);
-                    setVideoPlaying(false);
+                    const slideId = slides[index]?.id;
+                    if (slideId && slides[index]?.type === "video") {
+                      updateVideoState(slideId, {
+                        playing: false,
+                        progress: 0,
+                      });
+                    }
                   }}
                   className={`flex-shrink-0 w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden border-2 transition-all ${
                     index === fullScreenIndex
@@ -554,7 +772,7 @@ export default function HeroSection({ setActiveNav }) {
                       : "border-white/30 hover:border-white/60"
                   }`}
                 >
-                  {slide.type === 'video' ? (
+                  {slide.type === "video" ? (
                     <div className="relative w-full h-full">
                       <img
                         src={slide.thumbnail}
@@ -564,11 +782,6 @@ export default function HeroSection({ setActiveNav }) {
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                         <Play size={16} className="text-white" />
                       </div>
-                      {slide.fromChannel && (
-                        <div className="absolute top-1 right-1 bg-blue-600 text-white rounded-full p-0.5">
-                          <div className="w-1 h-1"></div>
-                        </div>
-                      )}
                     </div>
                   ) : (
                     <img
@@ -600,8 +813,10 @@ export default function HeroSection({ setActiveNav }) {
           {loading && (
             <div className="absolute inset-0 flex items-center justify-center bg-gray-200/50">
               <div className="text-[#2F364D]">Loading media...</div>
-              {apiConfigStatus === 'fetching' && (
-                <div className="text-sm text-[#2F364D]/70 mt-2">Fetching YouTube videos...</div>
+              {apiConfigStatus === "fetching" && (
+                <div className="text-sm text-[#2F364D]/70 mt-2">
+                  Fetching YouTube videos...
+                </div>
               )}
             </div>
           )}
@@ -614,53 +829,26 @@ export default function HeroSection({ setActiveNav }) {
             </div>
           )}
 
-          {!loading && slides.length > 0 && slides.map((slide, index) => (
-            <div
-              key={slide.id}
-              className={`absolute inset-0 w-full h-full transition-opacity duration-500 cursor-pointer ${
-                index === currentSlide ? "opacity-100" : "opacity-0"
-              }`}
-              onClick={() => openFullScreen(index)}
-            >
-              {slide.type === 'video' ? (
-                renderYouTubePlayer(slide)
-              ) : (
-                <>
-                  <img
-                    src={slide.src}
-                    alt={slide.alt}
-                    className="w-full h-full object-cover rounded-2xl lg:rounded-3xl hover:opacity-95 transition-opacity"
-                    onError={(e) => {
-                      e.target.style.display = "none";
-                    }}
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity bg-black/20">
-                    <div className="bg-black/50 text-white rounded-full p-3 backdrop-blur-sm">
-                      <svg
-                        className="w-6 h-6"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m0 0l3-3m-3 3l-3-3"
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          ))}
+          {!loading &&
+            slides.length > 0 &&
+            slides.map((slide, index) => (
+              <div
+                key={slide.id}
+                className={`absolute inset-0 w-full h-full transition-opacity duration-500 ${
+                  index === currentSlide ? "opacity-100" : "opacity-0"
+                }`}
+              >
+                {slide.type === "video"
+                  ? renderYouTubePlayer(slide)
+                  : renderImage(slide, index)}
+              </div>
+            ))}
 
           {!loading && slides.length === 0 && !error && (
             <div className="absolute inset-0 flex items-center justify-center bg-gray-200/50">
               <div className="text-[#2F364D] text-center p-4">
                 No media available
-                {apiConfigStatus === 'missing' && (
+                {apiConfigStatus === "missing" && (
                   <div className="text-sm mt-2">YouTube API not configured</div>
                 )}
               </div>
@@ -713,12 +901,13 @@ export default function HeroSection({ setActiveNav }) {
             </>
           )}
 
-          {slides[currentSlide]?.type === 'video' && videoPlaying && (
-            <div className="absolute top-3 right-3 bg-black/50 text-white px-2 py-1 rounded text-xs font-medium backdrop-blur-sm flex items-center">
-              <div className="w-2 h-2 bg-red-500 rounded-full mr-2 animate-pulse"></div>
-              Playing
-            </div>
-          )}
+          {slides[currentSlide]?.type === "video" &&
+            getCurrentVideoState().playing && (
+              <div className="absolute top-3 right-3 bg-black/50 text-white px-2 py-1 rounded text-xs font-medium backdrop-blur-sm flex items-center">
+                <div className="w-2 h-2 bg-red-500 rounded-full mr-2 animate-pulse"></div>
+                Playing {getCurrentVideoState().progress}s
+              </div>
+            )}
         </div>
 
         {/* Announcements Section */}
@@ -791,7 +980,13 @@ export default function HeroSection({ setActiveNav }) {
                 {announcements.length > 1 && (
                   <>
                     <button
-                      onClick={() => setCurrentAnnouncement((prev) => (prev - 1 + announcements.length) % announcements.length)}
+                      onClick={() =>
+                        setCurrentAnnouncement(
+                          (prev) =>
+                            (prev - 1 + announcements.length) %
+                            announcements.length
+                        )
+                      }
                       className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 bg-slate-800/70 backdrop-blur-md 
                        hover:bg-slate-700/80 border border-slate-600/50 text-white rounded-full p-2 sm:p-2.5 transition-all z-10 hover:scale-110"
                       aria-label="Previous announcement"
@@ -812,7 +1007,11 @@ export default function HeroSection({ setActiveNav }) {
                     </button>
 
                     <button
-                      onClick={() => setCurrentAnnouncement((prev) => (prev + 1) % announcements.length)}
+                      onClick={() =>
+                        setCurrentAnnouncement(
+                          (prev) => (prev + 1) % announcements.length
+                        )
+                      }
                       className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 bg-slate-800/70 backdrop-blur-md 
                        hover:bg-slate-700/80 border border-slate-600/50 text-white rounded-full p-2 sm:p-2.5 transition-all z-10 hover:scale-110"
                       aria-label="Next announcement"
