@@ -289,32 +289,6 @@ function Header({ activeNav, setActiveNav, onCartClick }) {
             >
               <Menu size={20} className="text-white" />
             </button>
-
-            {/* Optional: Add other action buttons that should be visible on desktop */}
-            {isAuthenticated && (
-              <div className="hidden md:flex items-center gap-2">
-                <button
-                  onClick={handleCartClick}
-                  className="relative p-2 text-white hover:bg-white/10 rounded-lg transition-colors"
-                  aria-label="Shopping cart"
-                >
-                  <ShoppingCart size={20} />
-                  {cartItemCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                      {cartItemCount}
-                    </span>
-                  )}
-                </button>
-
-                <button
-                  onClick={handleProfileClick}
-                  className="p-2 text-white hover:bg-white/10 rounded-lg transition-colors"
-                  aria-label="User profile"
-                >
-                  <User size={20} />
-                </button>
-              </div>
-            )}
           </div>
         </div>
       </header>
@@ -434,29 +408,6 @@ function Header({ activeNav, setActiveNav, onCartClick }) {
                 </button>
               ))}
             </nav>
-
-            {/* Optional: Add user profile section in drawer */}
-            {isAuthenticated && (
-              <>
-                <Divider sx={{ borderColor: "rgba(255,255,255,0.1)", mx: 2 }} />
-                <div className="p-4 space-y-2">
-                  <button
-                    onClick={handleDashboardClick}
-                    className="w-full text-left px-4 py-3 rounded-lg text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 transition-all duration-200 flex items-center gap-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-                  >
-                    <LayoutDashboard size={16} />
-                    Dashboard
-                  </button>
-                  <button
-                    onClick={handleLogoutClick}
-                    className="w-full text-left px-4 py-3 rounded-lg text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all duration-200 flex items-center gap-3 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
-                  >
-                    <LogOut size={16} />
-                    Logout
-                  </button>
-                </div>
-              </>
-            )}
           </div>
 
           {/* Drawer Footer */}

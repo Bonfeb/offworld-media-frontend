@@ -352,214 +352,136 @@ const Announcements = () => {
     return newId;
   };
 
-  // Check user authentication and staff status
-  const checkUserStatus = async () => {
-    try {
-      // Try to load announcements - this will fail with 401/403 if user is not authenticated/staff
-      const response = await API.get('/announcements/');
-      
-      if (response.data.status === 'success') {
-        setUserStatus({
-          isAuthenticated: true,
-          isStaff: true, // If we can access announcements, user is staff
-          checked: true
-        });
-        return true;
-      }
-    } catch (err) {
-      console.log('Auth check error:', err.response?.status);
-      
-      if (err.response?.status === 401) {
-        setUserStatus({
-          isAuthenticated: false,
-          isStaff: false,
-          checked: true
-        });
-        showAlert(
-          'Authentication Required', 
-          'Please log in to access announcements', 
-          'warning'
-        );
-      } else if (err.response?.status === 403) {
-        setUserStatus({
-          isAuthenticated: true,
-          isStaff: false,
-          checked: true
-        });
-        showAlert(
-          'Staff Access Required', 
-          'You need staff permissions to manage announcements', 
-          'warning'
-        );
-      } else {
-        setUserStatus({
-          isAuthenticated: false,
-          isStaff: false,
-          checked: true
-        });
-        showAlert(
-          'Access Error', 
-          'Unable to verify user permissions', 
-          'error'
-        );
-      }
-      return false;
-    }
-  };
-
-  // Load announcements from backend
   const loadAnnouncements = async () => {
-    try {
-      setLoading(true);
-      const response = await API.get('/announcements/');
-      
-      if (response.data.status === 'success') {
-        setAnnouncements(response.data.announcements || []);
-      } else {
-        showAlert(
-          'Load Failed',
-          'Failed to load announcements: ' + (response.data.error || 'Unknown error'),
-          'error'
-        );
-        setAnnouncements([]);
-      }
-    } catch (err) {
-      const errorMessage = err.response?.data?.error || err.message || 'Failed to load announcements';
-      
-      if (err.response?.status === 401) {
-        showAlert('Authentication Required', 'Please log in to view announcements', 'error');
-      } else if (err.response?.status === 403) {
-        showAlert('Access Denied', 'Staff permissions required to view announcements', 'error');
-      } else {
-        showAlert('Load Failed', errorMessage, 'error');
-      }
-      setAnnouncements([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    setLoading(true);
+    const response = await API.get('/announcements/');
 
-  // Save announcements to backend
+    setAnnouncements(response.data.announcements || []);
+  } catch (err) {
+    const message = err.response?.data?.error || 'Failed to load announcements';
+    showAlert('Load Failed', message, 'error');
+    setAnnouncements([]);
+  } finally {
+    setLoading(false);
+  }
+};
+
   const saveAnnouncements = async (updatedAnnouncements) => {
-    try {
-      setSaving(true);
-      const response = await API.post('/announcements/update/', {
-        announcements: updatedAnnouncements
-      });
-      
-      if (response.data.status === 'success') {
-        return true;
-      } else {
-        throw new Error(response.data.error || 'Failed to save announcements');
-      }
-    } catch (err) {
-      const errorMessage = err.response?.data?.error || err.message || 'Failed to save announcements';
-      
-      // Check if it's a permission error
-      if (err.response?.status === 401) {
-        showAlert('Authentication Required', 'Please log in to modify announcements', 'error');
-      } else if (err.response?.status === 403) {
-        showAlert('Permission Denied', 'Only staff members can modify announcements', 'error');
-      } else if (err.response?.status === 404) {
-        showAlert('Not Found', 'The announcements resource was not found', 'error');
-      } else {
-        showAlert('Save Failed', errorMessage, 'error');
-      }
-      return false;
-    } finally {
-      setSaving(false);
-    }
-  };
+  try {
+    setSaving(true);
 
-  // Delete announcement - handles both string and number IDs
+    const response = await API.post('/announcements/update/', {
+      announcements: updatedAnnouncements
+    });
+
+    if (response.data.status === 'success') {
+      return true;
+    }
+
+    throw new Error(response.data.error || 'Failed to save announcements');
+
+  } catch (err) {
+    const msg = err.response?.data?.error || err.message;
+
+    if (err.response?.status === 401) {
+      showAlert('Authentication Required', 'You must log in first', 'error');
+    } else if (err.response?.status === 403) {
+      showAlert('Permission Denied', 'Staff access required', 'error');
+    } else {
+      showAlert('Save Failed', msg, 'error');
+    }
+
+    return false;
+
+  } finally {
+    setSaving(false);
+  }
+};
+
   const deleteAnnouncement = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this announcement?')) {
-      return;
-    }
+  if (!window.confirm('Are you sure you want to delete this announcement?')) {
+    return;
+  }
 
-    try {
-      setSaving(true);
-      
-      // Convert ID to string for the API call to ensure consistency
-      const announcementId = String(id);
-      
-      const response = await API.delete(`/announcements/delete/${announcementId}/`);
-      
-      if (response.data.status === 'success') {
-        showAlert('Success', response.data.message || 'Announcement deleted successfully', 'success');
-        await loadAnnouncements();
-      } else {
-        throw new Error(response.data.error || 'Failed to delete announcement');
-      }
-    } catch (err) {
-      const errorMessage = err.response?.data?.error || err.message || 'Failed to delete announcement';
-      
-      // Check if it's a permission error
-      if (err.response?.status === 401) {
-        showAlert('Authentication Required', 'Please log in to delete announcements', 'error');
-      } else if (err.response?.status === 403) {
-        showAlert('Permission Denied', 'Only staff members can delete announcements', 'error');
-      } else if (err.response?.status === 404) {
-        showAlert('Not Found', 'Announcement not found', 'error');
-      } else {
-        showAlert('Delete Failed', errorMessage, 'error');
-      }
-    } finally {
-      setSaving(false);
-    }
-  };
+  try {
+    setSaving(true);
 
-  // Add or update announcement
-  const handleSaveAnnouncement = async (announcement) => {
-    try {
-      setSaving(true);
-      let updatedAnnouncements;
-      
-      if (editingAnnouncement) {
-        // Update existing announcement
-        updatedAnnouncements = announcements.map(a => 
-          compareIds(a.id, announcement.id) ? announcement : a
-        );
-      } else {
-        // Create new announcement with unique ID
-        const newAnnouncement = {
-          ...announcement,
-          id: generateUniqueId()
-        };
-        updatedAnnouncements = [...announcements, newAnnouncement];
-      }
+    const response = await API.delete(`/announcements/delete/${String(id)}/`);
 
-      // Save to backend first, then update state
-      const success = await saveAnnouncements(updatedAnnouncements);
-      if (success) {
-        // Only show success and update state if backend save was successful
-        if (editingAnnouncement) {
-          showAlert('Success', 'Announcement updated successfully', 'success');
-        } else {
-          showAlert('Success', 'Announcement created successfully', 'success');
-        }
-        
-        await loadAnnouncements(); // Reload from backend to ensure consistency
-        setShowForm(false);
-        setEditingAnnouncement(null);
-      }
-    } catch (err) {
-      // Error is already handled in saveAnnouncements
-      console.error('Failed to save announcement:', err);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // Initialize - check user status and load announcements
-  useEffect(() => {
-    const initialize = async () => {
-      await checkUserStatus();
+    if (response.data.status === 'success') {
+      showAlert('Success', 'Announcement deleted successfully', 'success');
       await loadAnnouncements();
-    };
-    
-    initialize();
-  }, []);
+    } else {
+      throw new Error(response.data.error || 'Delete failed');
+    }
+
+  } catch (err) {
+    const msg = err.response?.data?.error || err.message;
+
+    if (err.response?.status === 401) {
+      showAlert('Authentication Required', 'Please log in', 'error');
+    } else if (err.response?.status === 403) {
+      showAlert('Permission Denied', 'Staff access required', 'error');
+    } else if (err.response?.status === 404) {
+      showAlert('Not Found', 'Announcement not found', 'error');
+    } else {
+      showAlert('Delete Failed', msg, 'error');
+    }
+
+  } finally {
+    setSaving(false);
+  }
+};
+
+const handleSaveAnnouncement = async (announcement) => {
+  try {
+    setSaving(true);
+
+    let updatedList;
+
+    if (editingAnnouncement) {
+      updatedList = announcements.map(a =>
+        compareIds(a.id, announcement.id) ? announcement : a
+      );
+    } else {
+      updatedList = [
+        ...announcements, 
+        { ...announcement, id: generateUniqueId() }
+      ];
+    }
+
+    const success = await saveAnnouncements(updatedList);
+
+    if (success) {
+      showAlert(
+        "Success",
+        editingAnnouncement
+          ? "Announcement updated successfully"
+          : "Announcement created successfully",
+        "success"
+      );
+
+      await loadAnnouncements();
+      setShowForm(false);
+      setEditingAnnouncement(null);
+    }
+
+  } catch (err) {
+    const message = err.response?.data?.error || err.message || "Save failed";
+
+    if (err.response?.status === 401) {
+      showAlert('Authentication Required', 'Please log in to modify announcements', 'error');
+    } else if (err.response?.status === 403) {
+      showAlert('Permission Denied', 'Only staff members can modify announcements', 'error');
+    } else {
+      showAlert('Save Failed', message, 'error');
+    }
+
+  } finally {
+    setSaving(false);
+  }
+};
 
   // Get unique types from announcements for filter
   const availableTypes = [...new Set(announcements.map(ann => ann.type))];
