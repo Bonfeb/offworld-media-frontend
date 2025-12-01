@@ -6,18 +6,19 @@ import {
   X, 
   Calendar, 
   Music, 
-  Video, 
-  Mic2, 
   Megaphone,
   Save,
   Loader2,
   Tag,
   Clock,
-  AlertCircle
+  AlertCircle,
+  CheckCircle,
+  Shield
 } from 'lucide-react';
+import { Snackbar, Alert, AlertTitle } from '@mui/material';
 import API from '../../api';
 
-// Dynamic type configuration - will adapt to any types from backend
+// Dynamic type configuration
 const getTypeConfig = (type) => {
   const typeConfigs = {
     promotion: {
@@ -48,7 +49,6 @@ const getTypeConfig = (type) => {
       label: 'News',
       badgeColor: 'bg-green-500'
     },
-    // Default fallback for any unexpected types
     default: {
       icon: Megaphone,
       color: 'bg-gray-100 text-gray-800 border-gray-200',
@@ -96,7 +96,6 @@ const AnnouncementForm = ({ isOpen, onClose, onSave, editingAnnouncement, isSavi
     if (!formData.title.trim()) newErrors.title = 'Title is required';
     if (!formData.description.trim()) newErrors.description = 'Description is required';
     
-    // Date validation based on type
     if (formData.type === 'promotion') {
       if (!formData.startDate) newErrors.startDate = 'Start date is required';
       if (!formData.endDate) newErrors.endDate = 'End date is required';
@@ -117,7 +116,7 @@ const AnnouncementForm = ({ isOpen, onClose, onSave, editingAnnouncement, isSavi
 
     const announcement = {
       ...formData,
-      id: editingAnnouncement?.id || Date.now(),
+      id: editingAnnouncement?.id || Date.now().toString(),
     };
     onSave(announcement);
   };
@@ -218,7 +217,6 @@ const AnnouncementForm = ({ isOpen, onClose, onSave, editingAnnouncement, isSavi
                     onClick={() => setFormData({ 
                       ...formData, 
                       type: type.value,
-                      // Reset dates when type changes
                       startDate: type.value === 'promotion' ? formData.startDate || new Date().toISOString().split('T')[0] : '',
                       endDate: type.value === 'promotion' ? formData.endDate : '',
                       date: type.value !== 'promotion' ? formData.date || new Date().toISOString().split('T')[0] : ''
@@ -314,18 +312,127 @@ const Announcements = () => {
   const [saving, setSaving] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingAnnouncement, setEditingAnnouncement] = useState(null);
-  const [error, setError] = useState('');
+  const [alert, setAlert] = useState({ show: false, message: '', type: 'success', title: '' });
   const [filter, setFilter] = useState('all');
+  const [userStatus, setUserStatus] = useState({
+    isAuthenticated: false,
+    isStaff: false,
+    checked: false
+  });
+
+  // Show alert function
+  const showAlert = (title, message, type = 'success') => {
+    setAlert({ show: true, message, type, title });
+    setTimeout(() => setAlert({ show: false, message: '', type: 'success', title: '' }), 6000);
+  };
+
+  // Handle alert close
+  const handleAlertClose = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setAlert({ show: false, message: '', type: 'success', title: '' });
+  };
+
+  // Helper function to compare IDs (handles both string and number IDs)
+  const compareIds = (id1, id2) => {
+    return String(id1) === String(id2);
+  };
+
+  // Generate a unique ID (handles existing numeric and string IDs)
+  const generateUniqueId = () => {
+    const existingIds = new Set(announcements.map(ann => String(ann.id)));
+    let newId = Date.now().toString();
+    
+    // Ensure the ID is truly unique
+    while (existingIds.has(newId)) {
+      newId = (parseInt(newId) + 1).toString();
+    }
+    
+    return newId;
+  };
+
+  // Check user authentication and staff status
+  const checkUserStatus = async () => {
+    try {
+      // Try to load announcements - this will fail with 401/403 if user is not authenticated/staff
+      const response = await API.get('/announcements/');
+      
+      if (response.data.status === 'success') {
+        setUserStatus({
+          isAuthenticated: true,
+          isStaff: true, // If we can access announcements, user is staff
+          checked: true
+        });
+        return true;
+      }
+    } catch (err) {
+      console.log('Auth check error:', err.response?.status);
+      
+      if (err.response?.status === 401) {
+        setUserStatus({
+          isAuthenticated: false,
+          isStaff: false,
+          checked: true
+        });
+        showAlert(
+          'Authentication Required', 
+          'Please log in to access announcements', 
+          'warning'
+        );
+      } else if (err.response?.status === 403) {
+        setUserStatus({
+          isAuthenticated: true,
+          isStaff: false,
+          checked: true
+        });
+        showAlert(
+          'Staff Access Required', 
+          'You need staff permissions to manage announcements', 
+          'warning'
+        );
+      } else {
+        setUserStatus({
+          isAuthenticated: false,
+          isStaff: false,
+          checked: true
+        });
+        showAlert(
+          'Access Error', 
+          'Unable to verify user permissions', 
+          'error'
+        );
+      }
+      return false;
+    }
+  };
 
   // Load announcements from backend
   const loadAnnouncements = async () => {
     try {
       setLoading(true);
-      setError('');
       const response = await API.get('/announcements/');
-      setAnnouncements(response.data.announcements || []);
+      
+      if (response.data.status === 'success') {
+        setAnnouncements(response.data.announcements || []);
+      } else {
+        showAlert(
+          'Load Failed',
+          'Failed to load announcements: ' + (response.data.error || 'Unknown error'),
+          'error'
+        );
+        setAnnouncements([]);
+      }
     } catch (err) {
-      setError('Failed to load announcements');
+      const errorMessage = err.response?.data?.error || err.message || 'Failed to load announcements';
+      
+      if (err.response?.status === 401) {
+        showAlert('Authentication Required', 'Please log in to view announcements', 'error');
+      } else if (err.response?.status === 403) {
+        showAlert('Access Denied', 'Staff permissions required to view announcements', 'error');
+      } else {
+        showAlert('Load Failed', errorMessage, 'error');
+      }
       setAnnouncements([]);
     } finally {
       setLoading(false);
@@ -336,20 +443,35 @@ const Announcements = () => {
   const saveAnnouncements = async (updatedAnnouncements) => {
     try {
       setSaving(true);
-      setError('');
-      await API.post('/announcements/update/', {
+      const response = await API.post('/announcements/update/', {
         announcements: updatedAnnouncements
       });
-      await loadAnnouncements();
+      
+      if (response.data.status === 'success') {
+        return true;
+      } else {
+        throw new Error(response.data.error || 'Failed to save announcements');
+      }
     } catch (err) {
-      setError('Failed to save announcements');
-      throw err;
+      const errorMessage = err.response?.data?.error || err.message || 'Failed to save announcements';
+      
+      // Check if it's a permission error
+      if (err.response?.status === 401) {
+        showAlert('Authentication Required', 'Please log in to modify announcements', 'error');
+      } else if (err.response?.status === 403) {
+        showAlert('Permission Denied', 'Only staff members can modify announcements', 'error');
+      } else if (err.response?.status === 404) {
+        showAlert('Not Found', 'The announcements resource was not found', 'error');
+      } else {
+        showAlert('Save Failed', errorMessage, 'error');
+      }
+      return false;
     } finally {
       setSaving(false);
     }
   };
 
-  // Delete announcement
+  // Delete announcement - handles both string and number IDs
   const deleteAnnouncement = async (id) => {
     if (!window.confirm('Are you sure you want to delete this announcement?')) {
       return;
@@ -357,11 +479,31 @@ const Announcements = () => {
 
     try {
       setSaving(true);
-      setError('');
-      await API.delete(`/announcements/delete/${id}/`);
-      await loadAnnouncements();
+      
+      // Convert ID to string for the API call to ensure consistency
+      const announcementId = String(id);
+      
+      const response = await API.delete(`/announcements/delete/${announcementId}/`);
+      
+      if (response.data.status === 'success') {
+        showAlert('Success', response.data.message || 'Announcement deleted successfully', 'success');
+        await loadAnnouncements();
+      } else {
+        throw new Error(response.data.error || 'Failed to delete announcement');
+      }
     } catch (err) {
-      setError('Failed to delete announcement');
+      const errorMessage = err.response?.data?.error || err.message || 'Failed to delete announcement';
+      
+      // Check if it's a permission error
+      if (err.response?.status === 401) {
+        showAlert('Authentication Required', 'Please log in to delete announcements', 'error');
+      } else if (err.response?.status === 403) {
+        showAlert('Permission Denied', 'Only staff members can delete announcements', 'error');
+      } else if (err.response?.status === 404) {
+        showAlert('Not Found', 'Announcement not found', 'error');
+      } else {
+        showAlert('Delete Failed', errorMessage, 'error');
+      }
     } finally {
       setSaving(false);
     }
@@ -370,27 +512,53 @@ const Announcements = () => {
   // Add or update announcement
   const handleSaveAnnouncement = async (announcement) => {
     try {
+      setSaving(true);
       let updatedAnnouncements;
       
       if (editingAnnouncement) {
+        // Update existing announcement
         updatedAnnouncements = announcements.map(a => 
-          a.id === announcement.id ? announcement : a
+          compareIds(a.id, announcement.id) ? announcement : a
         );
       } else {
-        updatedAnnouncements = [...announcements, announcement];
+        // Create new announcement with unique ID
+        const newAnnouncement = {
+          ...announcement,
+          id: generateUniqueId()
+        };
+        updatedAnnouncements = [...announcements, newAnnouncement];
       }
 
-      await saveAnnouncements(updatedAnnouncements);
-      setShowForm(false);
-      setEditingAnnouncement(null);
+      // Save to backend first, then update state
+      const success = await saveAnnouncements(updatedAnnouncements);
+      if (success) {
+        // Only show success and update state if backend save was successful
+        if (editingAnnouncement) {
+          showAlert('Success', 'Announcement updated successfully', 'success');
+        } else {
+          showAlert('Success', 'Announcement created successfully', 'success');
+        }
+        
+        await loadAnnouncements(); // Reload from backend to ensure consistency
+        setShowForm(false);
+        setEditingAnnouncement(null);
+      }
     } catch (err) {
-      // Error is already set in saveAnnouncements
+      // Error is already handled in saveAnnouncements
+      console.error('Failed to save announcement:', err);
+    } finally {
+      setSaving(false);
     }
   };
 
-  // Initialize
+  // Initialize - check user status and load announcements
   useEffect(() => {
-    loadAnnouncements();
+    const initialize = async () => {
+      await checkUserStatus();
+      await loadAnnouncements();
+    };
+    
+    initialize();
   }, []);
 
   // Get unique types from announcements for filter
@@ -423,11 +591,19 @@ const Announcements = () => {
   };
 
   const handleNewAnnouncement = () => {
+    if (!userStatus.isStaff) {
+      showAlert('Access Denied', 'Staff permissions required to create announcements', 'error');
+      return;
+    }
     setEditingAnnouncement(null);
     setShowForm(true);
   };
 
   const handleEditAnnouncement = (announcement) => {
+    if (!userStatus.isStaff) {
+      showAlert('Access Denied', 'Staff permissions required to edit announcements', 'error');
+      return;
+    }
     setEditingAnnouncement(announcement);
     setShowForm(true);
   };
@@ -447,61 +623,123 @@ const Announcements = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-4 sm:py-6 lg:py-8 px-3 sm:px-4 lg:px-6">
+      {/* Snackbar Alert */}
+      <Snackbar
+        open={alert.show}
+        autoHideDuration={6000}
+        onClose={handleAlertClose}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        sx={{
+          '& .MuiSnackbar-root': {
+            top: '80px !important',
+          },
+        }}
+      >
+        <Alert
+          onClose={handleAlertClose}
+          severity={alert.type}
+          variant="filled"
+          sx={{
+            width: '100%',
+            fontSize: '1rem',
+            '& .MuiAlert-message': {
+              width: '100%',
+            },
+          }}
+        >
+          <AlertTitle sx={{ fontWeight: 'bold', fontSize: '1.1rem', mb: 1 }}>
+            {alert.title}
+          </AlertTitle>
+          {alert.message}
+        </Alert>
+      </Snackbar>
+
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Announcements Manager</h1>
-          <p className="text-gray-600">Manage promotions, releases, events, and news</p>
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+            Announcements Manager
+          </h1>
+          <p className="text-gray-600 text-sm sm:text-base">
+            Manage promotions, releases, events, and news
+          </p>
+          
+          {/* User Status Indicator */}
+          {userStatus.checked && (
+            <div className="mt-3 flex items-center gap-2">
+              <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                userStatus.isStaff 
+                  ? 'bg-green-100 text-green-800' 
+                  : 'bg-yellow-100 text-yellow-800'
+              }`}>
+                <Shield size={12} />
+                <span>
+                  {userStatus.isStaff 
+                    ? 'Staff Access' 
+                    : userStatus.isAuthenticated 
+                      ? 'Limited Access' 
+                      : 'Not Logged In'
+                  }
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Error Alert */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
-            <AlertCircle size={20} className="text-red-500" />
-            <p className="text-red-700 flex-1">{error}</p>
-            <button 
-              onClick={() => setError('')}
-              className="text-red-500 hover:text-red-700"
-            >
-              <X size={16} />
-            </button>
-          </div>
-        )}
-
         {/* Stats and Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-            <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
-            <div className="text-gray-600 text-sm">Total</div>
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 mb-6">
+          <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm border border-gray-200">
+            <div className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{stats.total}</div>
+            <div className="text-gray-600 text-xs sm:text-sm">Total</div>
           </div>
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-            <div className="text-2xl font-bold text-green-600">{stats.active}</div>
-            <div className="text-gray-600 text-sm">Active</div>
+          <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm border border-gray-200">
+            <div className="text-lg sm:text-xl lg:text-2xl font-bold text-green-600">{stats.active}</div>
+            <div className="text-gray-600 text-xs sm:text-sm">Active</div>
           </div>
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-            <div className="text-2xl font-bold text-blue-600">{stats.upcoming}</div>
-            <div className="text-gray-600 text-sm">Upcoming</div>
+          <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm border border-gray-200">
+            <div className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-600">{stats.upcoming}</div>
+            <div className="text-gray-600 text-xs sm:text-sm">Upcoming</div>
           </div>
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-            <div className="text-2xl font-bold text-red-600">{stats.expired + stats.past}</div>
-            <div className="text-gray-600 text-sm">Expired/Past</div>
+          <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm border border-gray-200">
+            <div className="text-lg sm:text-xl lg:text-2xl font-bold text-red-600">{stats.expired + stats.past}</div>
+            <div className="text-gray-600 text-xs sm:text-sm">Expired/Past</div>
           </div>
           <button
             onClick={handleNewAnnouncement}
-            disabled={saving}
-            className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl p-4 shadow-sm hover:shadow-lg transition-all flex items-center justify-center gap-2 font-semibold disabled:opacity-50"
+            disabled={saving || loading || !userStatus.isStaff}
+            className="col-span-2 md:col-span-4 lg:col-span-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm hover:shadow-lg transition-all flex items-center justify-center gap-2 font-semibold text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
+            title={!userStatus.isStaff ? "Staff permissions required" : "Create new announcement"}
           >
-            <Plus size={20} />
-            New Announcement
+            <Plus size={18} className="sm:w-5 sm:h-5" />
+            <span className="hidden sm:inline">New Announcement</span>
+            <span className="sm:hidden">New</span>
           </button>
         </div>
+
+        {/* Access Warning for Non-Staff Users */}
+        {userStatus.checked && !userStatus.isStaff && (
+          <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="text-yellow-600 flex-shrink-0" size={20} />
+              <div>
+                <h3 className="font-semibold text-yellow-800">Limited Access</h3>
+                <p className="text-yellow-700 text-sm">
+                  {userStatus.isAuthenticated 
+                    ? "You need staff permissions to create, edit, or delete announcements." 
+                    : "Please log in with staff account to manage announcements."
+                  }
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Filters */}
         <div className="mb-6 flex flex-wrap gap-2">
           <button
             onClick={() => setFilter('all')}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+            className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-all text-xs sm:text-sm ${
               filter === 'all' 
                 ? 'bg-blue-600 text-white shadow-sm' 
                 : 'bg-white text-gray-700 border border-gray-300 hover:border-gray-400'
@@ -515,46 +753,50 @@ const Announcements = () => {
               <button
                 key={type}
                 onClick={() => setFilter(type)}
-                className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
+                className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 text-xs sm:text-sm ${
                   filter === type 
                     ? `${config.color} border border-current shadow-sm` 
                     : 'bg-white text-gray-700 border border-gray-300 hover:border-gray-400'
                 }`}
               >
-                <config.icon size={16} />
-                {config.label}
+                <config.icon size={14} className="sm:w-4 sm:h-4" />
+                <span className="hidden xs:inline">{config.label}</span>
+                <span className="xs:hidden">{config.label.split(' ')[0]}</span>
               </button>
             );
           })}
         </div>
 
         {/* Announcements Grid */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
           {loading ? (
-            <div className="flex items-center justify-center py-16">
+            <div className="flex items-center justify-center py-12 sm:py-16">
               <Loader2 size={32} className="animate-spin text-blue-600" />
-              <span className="ml-3 text-gray-600">Loading announcements...</span>
+              <span className="ml-3 text-gray-600 text-sm sm:text-base">Loading announcements...</span>
             </div>
           ) : filteredAnnouncements.length === 0 ? (
-            <div className="text-center py-16">
-              <Megaphone size={64} className="mx-auto text-gray-300 mb-4" />
+            <div className="text-center py-12 sm:py-16">
+              <Megaphone size={48} className="sm:w-16 sm:h-16 mx-auto text-gray-300 mb-4" />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 {filter === 'all' ? 'No announcements yet' : `No ${getTypeConfig(filter).label.toLowerCase()} announcements`}
               </h3>
-              <p className="text-gray-600 mb-6">
+              <p className="text-gray-600 text-sm sm:text-base mb-6 max-w-md mx-auto px-4">
                 {filter === 'all' 
                   ? 'Create your first announcement to get started' 
                   : `No ${getTypeConfig(filter).label.toLowerCase()} announcements match the current filter`}
               </p>
-              <button
-                onClick={handleNewAnnouncement}
-                className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-lg hover:shadow-lg transition-all font-semibold"
-              >
-                Create Announcement
-              </button>
+              {filter === 'all' && userStatus.isStaff && (
+                <button
+                  onClick={handleNewAnnouncement}
+                  disabled={saving}
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-lg hover:shadow-lg transition-all font-semibold text-sm sm:text-base disabled:opacity-50"
+                >
+                  Create Announcement
+                </button>
+              )}
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 p-4 sm:p-6">
               {filteredAnnouncements.map((announcement) => {
                 const config = getTypeConfig(announcement.type);
                 const IconComponent = config.icon;
@@ -568,8 +810,8 @@ const Announcements = () => {
 
                 return (
                   <div
-                    key={announcement.id}
-                    className={`border-2 rounded-xl p-5 transition-all hover:shadow-md ${
+                    key={String(announcement.id)}
+                    className={`border-2 rounded-lg sm:rounded-xl p-4 sm:p-5 transition-all hover:shadow-md ${
                       status === 'expired' || status === 'past'
                         ? 'border-gray-200 bg-gray-50 opacity-70' 
                         : 'border-gray-200 bg-white hover:border-blue-300'
@@ -578,7 +820,7 @@ const Announcements = () => {
                     {/* Header */}
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
                           <IconComponent size={12} className="mr-1" />
                           {config.label}
                         </span>
@@ -589,15 +831,15 @@ const Announcements = () => {
                     </div>
 
                     {/* Content */}
-                    <h3 className="font-bold text-gray-900 text-lg mb-2 line-clamp-2">
+                    <h3 className="font-bold text-gray-900 text-base sm:text-lg mb-2 line-clamp-2 leading-tight">
                       {announcement.title}
                     </h3>
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-3 leading-relaxed">
+                    <p className="text-gray-600 text-xs sm:text-sm mb-3 sm:mb-4 line-clamp-3 leading-relaxed">
                       {announcement.description}
                     </p>
 
                     {/* Dates */}
-                    <div className="space-y-2 mb-4">
+                    <div className="space-y-1 sm:space-y-2 mb-3 sm:mb-4">
                       {announcement.type === 'promotion' ? (
                         <>
                           <div className="flex items-center gap-2 text-xs text-gray-500">
@@ -614,28 +856,30 @@ const Announcements = () => {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                    <div className="flex items-center justify-between pt-3 sm:pt-4 border-t border-gray-100">
                       <div className="text-xs text-gray-500">
                         ID: {announcement.id}
                       </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleEditAnnouncement(announcement)}
-                          disabled={saving}
-                          className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50"
-                          title="Edit"
-                        >
-                          <Edit size={16} />
-                        </button>
-                        <button
-                          onClick={() => deleteAnnouncement(announcement.id)}
-                          disabled={saving}
-                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
-                          title="Delete"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
+                      {userStatus.isStaff && (
+                        <div className="flex gap-1 sm:gap-2">
+                          <button
+                            onClick={() => handleEditAnnouncement(announcement)}
+                            disabled={saving}
+                            className="p-1.5 sm:p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50"
+                            title="Edit"
+                          >
+                            <Edit size={14} className="sm:w-4 sm:h-4" />
+                          </button>
+                          <button
+                            onClick={() => deleteAnnouncement(announcement.id)}
+                            disabled={saving}
+                            className="p-1.5 sm:p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                            title="Delete"
+                          >
+                            <Trash2 size={14} className="sm:w-4 sm:h-4" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 );

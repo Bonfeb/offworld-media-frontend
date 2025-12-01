@@ -63,7 +63,7 @@ function Home({ onOpenContact }) {
         {/*<section id="Testimonials">
           <Testimonials />
         </section>*/}
-        <section id="Contact">
+        <section id="Contact Us">
           <Contact onOpenContact={onOpenContact} />
         </section>
       </main>

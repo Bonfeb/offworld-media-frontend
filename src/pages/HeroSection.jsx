@@ -157,13 +157,8 @@ export default function HeroSection({ setActiveNav }) {
   useEffect(() => {
     if (!YOUTUBE_API_KEY || !YOUTUBE_CHANNEL_ID) {
       setApiConfigStatus("missing");
-      console.warn("YouTube API configuration missing:", {
-        hasApiKey: !!YOUTUBE_API_KEY,
-        hasChannelId: !!YOUTUBE_CHANNEL_ID,
-      });
     } else {
       setApiConfigStatus("configured");
-      console.log("YouTube API configured successfully");
     }
   }, []);
 
@@ -220,15 +215,10 @@ export default function HeroSection({ setActiveNav }) {
 
           setChannelVideos(videos);
           setApiConfigStatus("success");
-          console.log(
-            `Successfully loaded ${videos.length} videos from YouTube channel`
-          );
         } else {
           setApiConfigStatus("no-channel");
-          console.warn("No YouTube channel found with the provided ID");
         }
       } catch (err) {
-        console.error("Error fetching YouTube videos:", err);
         setApiConfigStatus("error");
       }
     };

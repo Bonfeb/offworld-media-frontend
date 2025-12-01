@@ -40,11 +40,10 @@ function Header({ activeNav, setActiveNav, onCartClick }) {
     login,
   } = useContext(AuthContext);
 
-  const navItems = ["Home", "Services", "About Us", "Team", "Contact"];
+  const navItems = ["Home", "Services", "About Us", "Team", "Contact Us"];
 
   // Debug AuthContext changes
-  useEffect(() => {
-  }, [isAuthenticated, userGroups, userName, userId]);
+  useEffect(() => {}, [isAuthenticated, userGroups, userName, userId]);
 
   // Initialize cart and set up callback for cart updates
   useEffect(() => {
@@ -150,14 +149,12 @@ function Header({ activeNav, setActiveNav, onCartClick }) {
     setIsOpen(false);
     // Check authentication first
     if (!isAuthenticated) {
-      
       setShowSignIn(true);
       return;
     }
 
     // Check if user groups are available
     if (!userGroups || !Array.isArray(userGroups)) {
-      
       // Fallback to client dashboard if groups aren't available but user is authenticated
       navigate("/client-dashboard");
       return;
@@ -168,17 +165,12 @@ function Header({ activeNav, setActiveNav, onCartClick }) {
 
     if (userGroups.includes("admin")) {
       targetDashboard = "/admin-dashboard";
-      
     } else if (userGroups.includes("customer")) {
       targetDashboard = "/client-dashboard";
-      
     } else {
-      
       // Default fallback to client dashboard
       targetDashboard = "/client-dashboard";
     }
-
-    
 
     // Navigate to the target dashboard
     navigate(targetDashboard);
@@ -195,9 +187,7 @@ function Header({ activeNav, setActiveNav, onCartClick }) {
       setShowLogoutConfirm(false);
       // Redirect to home page after logout
       navigate("/");
-    } catch (error) {
-     
-    }
+    } catch (error) {}
   };
 
   const handleSignInSuccess = async (userData) => {
@@ -262,22 +252,18 @@ function Header({ activeNav, setActiveNav, onCartClick }) {
               stroke="rgba(0, 184, 200, 0.3)"
               strokeWidth="1.5"
             />
-          </svg> 
+          </svg>
         </div>
 
         {/* Header content */}
         <div className="max-w-7xl mx-auto h-full px-4 lg:px-8 flex justify-between items-center relative z-10">
-          {/* Left: Favicon - Only visible on sm and xs screens */}
-          <div className="flex md:hidden items-center">
-            <img 
-              src="/favicon.ico" 
-              alt="Offworld Media" 
-              className="h-8 w-8"
-            />
+          {/* Left: Logo on ALL screens */}
+          <div className="flex items-center md:w-0">
+            <img src="/favicon.ico" alt="Offworld Media" className="h-8 w-8" />
           </div>
 
           {/* Center: Desktop Navigation - Centered */}
-          <nav className="hidden md:flex items-center justify-center gap-4 lg:gap-6 absolute left-1/2 transform -translate-x-1/2">
+          <nav className="hidden md:flex items-center justify-center gap-4 lg:gap-6 md:absolute md:left-1/2 md:transform md:-translate-x-1/2">
             {navItems.map((item) => (
               <button
                 key={item}
@@ -293,16 +279,42 @@ function Header({ activeNav, setActiveNav, onCartClick }) {
             ))}
           </nav>
 
-          {/* Right: Cart + Menu */}
+          {/* Right: Action buttons and Hamburger Menu */}
           <div className="flex items-center gap-3">
             {/* Hamburger Menu - Only on Mobile */}
             <button
               onClick={() => setIsOpen(true)}
-              className="flex md:hidden w-10 h-10 items-center justify-center text-white hover:bg-white/10 rounded-lg transition-colors border border-white/20 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+              className="md:hidden w-10 h-10 flex items-center justify-center text-white hover:bg-white/10 rounded-lg transition-colors border border-white/20 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
               aria-label="Open menu"
             >
               <Menu size={20} className="text-white" />
             </button>
+
+            {/* Optional: Add other action buttons that should be visible on desktop */}
+            {isAuthenticated && (
+              <div className="hidden md:flex items-center gap-2">
+                <button
+                  onClick={handleCartClick}
+                  className="relative p-2 text-white hover:bg-white/10 rounded-lg transition-colors"
+                  aria-label="Shopping cart"
+                >
+                  <ShoppingCart size={20} />
+                  {cartItemCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {cartItemCount}
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  onClick={handleProfileClick}
+                  className="p-2 text-white hover:bg-white/10 rounded-lg transition-colors"
+                  aria-label="User profile"
+                >
+                  <User size={20} />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -345,9 +357,9 @@ function Header({ activeNav, setActiveNav, onCartClick }) {
         </div>
       )}
 
-      {/* MUI Drawer for Mobile Menu */}
+      {/* MUI Drawer for Mobile Menu - Now slides from LEFT */}
       <Drawer
-        anchor="right"
+        anchor="left"
         open={isOpen}
         onClose={toggleDrawer(false)}
         sx={{
@@ -376,9 +388,9 @@ function Header({ activeNav, setActiveNav, onCartClick }) {
         >
           {/* Drawer Header */}
           <div className="flex items-center justify-between p-4 border-b border-white/10">
-            <h2 className="text-white text-center font-bold text-lg">
-              Offworld Media
-            </h2>
+            <div className="flex items-center">
+              <h2 className="text-white font-bold text-lg">Offworld Media</h2>
+            </div>
             <IconButton
               onClick={toggleDrawer(false)}
               size="small"
@@ -423,7 +435,28 @@ function Header({ activeNav, setActiveNav, onCartClick }) {
               ))}
             </nav>
 
-            <Divider sx={{ borderColor: "rgba(255,255,255,0.1)", mx: 2 }} />
+            {/* Optional: Add user profile section in drawer */}
+            {isAuthenticated && (
+              <>
+                <Divider sx={{ borderColor: "rgba(255,255,255,0.1)", mx: 2 }} />
+                <div className="p-4 space-y-2">
+                  <button
+                    onClick={handleDashboardClick}
+                    className="w-full text-left px-4 py-3 rounded-lg text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 transition-all duration-200 flex items-center gap-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                  >
+                    <LayoutDashboard size={16} />
+                    Dashboard
+                  </button>
+                  <button
+                    onClick={handleLogoutClick}
+                    className="w-full text-left px-4 py-3 rounded-lg text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all duration-200 flex items-center gap-3 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
+                  >
+                    <LogOut size={16} />
+                    Logout
+                  </button>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Drawer Footer */}
@@ -434,7 +467,6 @@ function Header({ activeNav, setActiveNav, onCartClick }) {
           </div>
         </div>
       </Drawer>
-
     </>
   );
 }
