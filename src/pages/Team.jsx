@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -10,8 +10,6 @@ import {
   Scissors,
   Camera,
   Video,
-  Facebook as FacebookIcon,
-  Instagram as InstagramIcon,
 } from "lucide-react";
 import { Facebook, Instagram } from "@mui/icons-material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -24,6 +22,8 @@ export default function Team() {
   const [error, setError] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [cardsPerView, setCardsPerView] = useState(2);
+  const [isPaused, setIsPaused] = useState(false);
+  const autoSlideRef = useRef(null);
 
   useEffect(() => {
     fetchTeamMembers();
@@ -41,6 +41,32 @@ export default function Team() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // Auto-slide effect
+  useEffect(() => {
+    if (teamMembers.length <= 1 || isPaused) return;
+
+    const startAutoSlide = () => {
+      if (autoSlideRef.current) {
+        clearInterval(autoSlideRef.current);
+      }
+
+      autoSlideRef.current = setInterval(() => {
+        setCurrentIndex((prev) => {
+          const maxIndex = Math.max(0, teamMembers.length - cardsPerView);
+          return prev >= maxIndex ? 0 : prev + 1;
+        });
+      }, 4000); // Change slide every 4 seconds
+    };
+
+    startAutoSlide();
+
+    return () => {
+      if (autoSlideRef.current) {
+        clearInterval(autoSlideRef.current);
+      }
+    };
+  }, [teamMembers.length, cardsPerView, isPaused]);
 
   const fetchTeamMembers = async () => {
     setIsLoading(true);
@@ -89,9 +115,22 @@ export default function Team() {
   };
 
   const maxIndex = Math.max(0, teamMembers.length - cardsPerView);
-  const nextSlide = () => setCurrentIndex((p) => (p >= maxIndex ? 0 : p + 1));
-  const prevSlide = () => setCurrentIndex((p) => (p <= 0 ? maxIndex : p - 1));
-  const goToSlide = (i) => setCurrentIndex(i);
+
+  const nextSlide = () => {
+    setIsPaused(true);
+    setTimeout(() => setIsPaused(false), 8000); // Pause auto-slide for 8 seconds after manual interaction
+    setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
+  };
+
+  const prevSlide = () => {
+    setIsPaused(true);
+    setTimeout(() => setIsPaused(false), 8000);
+    setCurrentIndex((prev) => (prev <= 0 ? maxIndex : prev - 1));
+  };
+
+  // Mouse events to pause auto-slide on hover
+  const handleMouseEnter = () => setIsPaused(true);
+  const handleMouseLeave = () => setIsPaused(false);
 
   if (isLoading) {
     return (
@@ -170,7 +209,11 @@ export default function Team() {
           </div>
 
           {/* Carousel */}
-          <div className="relative mb-8 lg:mb-12">
+          <div
+            className="relative mb-8 lg:mb-12"
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+          >
             {teamMembers.length === 0 ? (
               <div className="text-center py-16">
                 <Users className="w-20 h-20 text-[#a2aac7] mx-auto mb-6" />
@@ -180,25 +223,29 @@ export default function Team() {
               </div>
             ) : (
               <>
-                {/* Navigation Arrows - Desktop */}
-                {cardsPerView < teamMembers.length && (
-                  <>
-                    <button
-                      onClick={prevSlide}
-                      className="absolute -left-2 sm:-left-4 lg:-left-6 top-1/2 -translate-y-1/2 z-10 bg-white/10 backdrop-blur-md text-white p-3 sm:p-4 rounded-full shadow-2xl hover:bg-white/20 transition-all duration-300 border border-white/20 hidden md:flex items-center justify-center"
-                      aria-label="Previous"
-                    >
-                      <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
-                    </button>
-                    <button
-                      onClick={nextSlide}
-                      className="absolute -right-2 sm:-right-4 lg:-right-6 top-1/2 -translate-y-1/2 z-10 bg-white/10 backdrop-blur-md text-white p-3 sm:p-4 rounded-full shadow-2xl hover:bg-white/20 transition-all duration-300 border border-white/20 hidden md:flex items-center justify-center"
-                      aria-label="Next"
-                    >
-                      <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
-                    </button>
-                  </>
-                )}
+                {/* Navigation Arrows - Desktop & Mobile */}
+                {cardsPerView < teamMembers.length &&
+                  teamMembers.length > 0 && (
+                    <>
+                      {/* Previous Button */}
+                      <button
+                        onClick={prevSlide}
+                        className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 z-50 bg-black/50 hover:bg-black/70 text-white rounded-full sm:p-4 transition-all backdrop-blur-md border border-white/20 hover:scale-110"
+                        aria-label="Previous"
+                      >
+                        <ChevronLeft className="sm:w-4 sm:h-4" />
+                      </button>
+
+                      {/* Next Button */}
+                      <button
+                        onClick={nextSlide}
+                        className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 z-50 bg-black/50 hover:bg-black/70 text-white rounded-full sm:p-4 transition-all backdrop-blur-md border border-white/20 hover:scale-110"
+                        aria-label="Next"
+                      >
+                        <ChevronRight className="sm:w-4 sm:h-4" />
+                      </button>
+                    </>
+                  )}
 
                 {/* Carousel Container */}
                 <div className="overflow-hidden px-2 sm:px-4 lg:px-6">
@@ -230,44 +277,6 @@ export default function Team() {
                     ))}
                   </div>
                 </div>
-
-                {/* Dots */}
-                {cardsPerView < teamMembers.length && (
-                  <div className="flex justify-center gap-2 sm:gap-3 mt-6 sm:mt-8 lg:mt-10">
-                    {[...Array(maxIndex + 1)].map((_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => goToSlide(i)}
-                        className={`rounded-full transition-all duration-300 ${
-                          i === currentIndex
-                            ? "bg-[#5A6DFF] w-6 sm:w-8 h-2 shadow-lg"
-                            : "bg-white/30 hover:bg-white/50 w-2 h-2"
-                        }`}
-                        aria-label={`Slide ${i + 1}`}
-                      />
-                    ))}
-                  </div>
-                )}
-
-                {/* Mobile Navigation */}
-                {cardsPerView < teamMembers.length && (
-                  <div className="flex justify-center gap-6 mt-6 sm:mt-8 md:hidden">
-                    <button
-                      onClick={prevSlide}
-                      className="bg-white/10 backdrop-blur-md text-white p-4 rounded-full shadow-2xl hover:bg-white/20 transition-all duration-300 border border-white/20"
-                      aria-label="Previous"
-                    >
-                      <ChevronLeft size={24} />
-                    </button>
-                    <button
-                      onClick={nextSlide}
-                      className="bg-white/10 backdrop-blur-md text-white p-4 rounded-full shadow-2xl hover:bg-white/20 transition-all duration-300 border border-white/20"
-                      aria-label="Next"
-                    >
-                      <ChevronRight size={24} />
-                    </button>
-                  </div>
-                )}
               </>
             )}
           </div>
@@ -288,7 +297,7 @@ export default function Team() {
   );
 }
 
-// Horizontal Team Member Card Component
+// Horizontal Team Member Card Component (remains the same)
 const TeamMemberCard = ({
   member,
   onSocialLinkClick,
@@ -343,12 +352,8 @@ const TeamMemberCard = ({
 
   const isValidUrl = (url) => {
     if (!url || typeof url !== "string") return false;
-
-    // Clean the URL first
     const cleanUrl = url.trim();
     if (!cleanUrl) return false;
-
-    // Check if it looks like a valid URL (starts with http and contains a domain)
     const urlPattern = /^https?:\/\/[^\s/$.?#].[^\s]*$/i;
     return urlPattern.test(cleanUrl);
   };
@@ -357,7 +362,6 @@ const TeamMemberCard = ({
     return member.name ? member.name.charAt(0).toUpperCase() : "T";
   };
 
-  // Render social icon based on component type
   const renderSocialIcon = (social) => {
     const hasLink = Boolean(social.link && isValidUrl(social.link));
 
