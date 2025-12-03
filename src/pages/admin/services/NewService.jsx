@@ -7,7 +7,6 @@ import API from "../../../api";
 const NewService = ({ show, handleClose, refreshServices, showAlert }) => {
   const [formData, setFormData] = useState({
     category: "photo-video",
-    audio_category: "",
     description: "",
     price: "",
     image: null,
@@ -16,35 +15,35 @@ const NewService = ({ show, handleClose, refreshServices, showAlert }) => {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const audioSubcategories = [
+  // Updated categories to match Django CATEGORY_CHOICES
+  const categoryOptions = [
+    { value: "photo-video", label: "Photo & Video Shooting" },
+    { value: "graphic", label: "Graphic Designing" },
+    { value: "broadcasting", label: "Digital Broadcasting" },
     { value: "beat_making", label: "Beat Making" },
     { value: "sound_recording", label: "Sound Recording" },
-    { value: "mixing", label: "Mixing" },
-    { value: "mastering", label: "Mastering" },
+    { value: "audio_mixing", label: "Audio Mixing" },
+    { value: "audio_mastering", label: "Audio Mastering" },
     { value: "music_video", label: "Music Video Production" },
   ];
 
-  const categoryLabels = {
+  // Create a mapping object for display purposes (optional)
+  const categoryDisplayNames = {
     "photo-video": "Photo & Video Shooting",
-    audio: "Music Production",
-    graphic: "Graphic Designing",
-    broadcasting: "Digital Broadcasting",
+    "graphic": "Graphic Designing",
+    "broadcasting": "Digital Broadcasting",
+    "beat_making": "Beat Making",
+    "sound_recording": "Sound Recording",
+    "audio_mixing": "Audio Mixing",
+    "audio_mastering": "Audio Mastering",
+    "music_video": "Music Video Production",
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     // Clear any existing errors when user starts typing
     if (error) setError("");
-
-    if (name === "category") {
-      setFormData((prev) => ({
-        ...prev,
-        category: value,
-        audio_category: value === "audio" ? prev.audio_category : "",
-      }));
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
-    }
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleFileChange = (e) => {
@@ -52,14 +51,11 @@ const NewService = ({ show, handleClose, refreshServices, showAlert }) => {
     // Clear any existing errors when user selects a file
     if (error) setError("");
 
-    setFormData((prev) => ({ ...prev, image: file }));
-
     if (file) {
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         setError("Image file size must be less than 5MB");
         e.target.value = ""; // Clear the input
-        setFormData((prev) => ({ ...prev, image: null }));
         return;
       }
 
@@ -74,21 +70,18 @@ const NewService = ({ show, handleClose, refreshServices, showAlert }) => {
       if (!validTypes.includes(file.type)) {
         setError("Please select a valid image file (JPEG, PNG, GIF, or WebP)");
         e.target.value = ""; // Clear the input
-        setFormData((prev) => ({ ...prev, image: null }));
         return;
       }
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
-      };
-      reader.readAsDataURL(file);
+      setFormData((prev) => ({ ...prev, image: file }));
+    } else {
+      setFormData((prev) => ({ ...prev, image: null }));
     }
   };
 
   const resetForm = () => {
     setFormData({
       category: "photo-video",
-      audio_category: "",
       description: "",
       price: "",
       image: null,
@@ -115,11 +108,6 @@ const NewService = ({ show, handleClose, refreshServices, showAlert }) => {
       return false;
     }
 
-    if (formData.category === "audio" && !formData.audio_category) {
-      setError("Please select an audio subcategory");
-      return false;
-    }
-
     if (!formData.description.trim()) {
       setError("Please enter a description");
       return false;
@@ -132,6 +120,13 @@ const NewService = ({ show, handleClose, refreshServices, showAlert }) => {
 
     if (!formData.image) {
       setError("Please select an image");
+      return false;
+    }
+
+    // Validate that the category value is valid
+    const validCategories = categoryOptions.map(opt => opt.value);
+    if (!validCategories.includes(formData.category)) {
+      setError("Please select a valid category");
       return false;
     }
 
@@ -152,19 +147,21 @@ const NewService = ({ show, handleClose, refreshServices, showAlert }) => {
     try {
       const formDataToSend = new FormData();
 
-      // Append all form data
+      // Append all form data - using the correct category values
       formDataToSend.append("category", formData.category);
       formDataToSend.append("description", formData.description.trim());
       formDataToSend.append("price", formData.price);
       formDataToSend.append("image", formData.image);
 
-      // Only append audio_category if category is audio
-      if (formData.category === "audio" && formData.audio_category) {
-        formDataToSend.append("audio_category", formData.audio_category);
+      // Log what's being sent for debugging
+      console.log("Sending form data:");
+      console.log("Category:", formData.category);
+      console.log("Category Display:", categoryDisplayNames[formData.category]);
+      for (let [key, value] of formDataToSend.entries()) {
+        console.log(key, ":", value);
       }
 
       const response = await API.post("/service/", formDataToSend, {
-        withCredentials: true,
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -172,8 +169,9 @@ const NewService = ({ show, handleClose, refreshServices, showAlert }) => {
 
       // Show success snackbar if showAlert function is provided
       if (showAlert) {
+        const displayName = categoryDisplayNames[formData.category] || formData.category;
         showAlert(
-          `${categoryLabels[formData.category]} service added successfully! 🎉`,
+          `Service "${displayName}" added successfully! 🎉`,
           "success"
         );
       }
@@ -187,30 +185,50 @@ const NewService = ({ show, handleClose, refreshServices, showAlert }) => {
       resetForm();
       handleClose();
     } catch (err) {
+      console.error("Error details:", err);
+      console.error("Error response:", err.response);
+
       // Handle different types of errors
-      if (err.response?.status === 400) {
+      if (err.response?.data) {
         const errorData = err.response.data;
+
+        // Handle Django serializer validation errors
         if (typeof errorData === "object") {
-          // Handle field-specific errors
-          const firstError = Object.values(errorData)[0];
-          setError(Array.isArray(firstError) ? firstError[0] : firstError);
+          // Check for field-specific errors
+          const fieldErrors = [];
+
+          Object.entries(errorData).forEach(([field, messages]) => {
+            if (Array.isArray(messages)) {
+              fieldErrors.push(`${field}: ${messages.join(", ")}`);
+            } else if (typeof messages === "string") {
+              fieldErrors.push(`${field}: ${messages}`);
+            }
+          });
+
+          if (fieldErrors.length > 0) {
+            setError(fieldErrors.join(". "));
+          } else {
+            setError("Please check your input fields.");
+          }
+        } else if (typeof errorData === "string") {
+          setError(errorData);
+        } else if (errorData.error) {
+          setError(errorData.error);
         } else {
-          setError(
-            errorData.message || "Invalid data. Please check your inputs."
-          );
+          setError("Invalid data. Please check your inputs.");
         }
       } else if (err.response?.status === 401) {
-        setError("You are not authorized. Please log in again.");
+        setError("You need to be logged in to add services.");
+      } else if (err.response?.status === 403) {
+        setError("You are not authorized. Admin access required.");
       } else if (err.response?.status === 413) {
         setError("Image file is too large. Please select a smaller image.");
       } else if (err.response?.status >= 500) {
         setError("Server error. Please try again later.");
+      } else if (err.request) {
+        setError("Network error. Please check your connection.");
       } else {
-        setError(
-          err.response?.data?.message ||
-            err.message ||
-            "Failed to add service. Please try again."
-        );
+        setError(err.message || "Failed to add service. Please try again.");
       }
     } finally {
       setIsSubmitting(false);
@@ -257,33 +275,16 @@ const NewService = ({ show, handleClose, refreshServices, showAlert }) => {
               required
               size="lg"
             >
-              <option value="photo-video">Photo & Video Shooting</option>
-              <option value="audio">Music Production</option>
-              <option value="graphic">Graphic Designing</option>
-              <option value="broadcasting">Digital Broadcasting</option>
+              {categoryOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </Form.Select>
+            <Form.Text className="text-muted">
+              Select the category that best describes your service.
+            </Form.Text>
           </Form.Group>
-
-          {formData.category === "audio" && (
-            <Form.Group className="mb-4">
-              <Form.Label className="fw-bold">Audio Subcategory *</Form.Label>
-              <Form.Select
-                name="audio_category"
-                value={formData.audio_category}
-                onChange={handleChange}
-                disabled={isSubmitting}
-                required
-                size="lg"
-              >
-                <option value="">Select Subcategory</option>
-                {audioSubcategories.map((sub) => (
-                  <option key={sub.value} value={sub.value}>
-                    {sub.label}
-                  </option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-          )}
 
           <Form.Group className="mb-4">
             <Form.Label className="fw-bold">Description *</Form.Label>
@@ -320,7 +321,7 @@ const NewService = ({ show, handleClose, refreshServices, showAlert }) => {
               placeholder="0.00"
             />
             <Form.Text className="text-muted">
-              Enter the price in Kenyan Shillings (KSH).
+              Enter the price in Kenyan Shillings (KSH). Minimum: 0.01
             </Form.Text>
           </Form.Group>
 
